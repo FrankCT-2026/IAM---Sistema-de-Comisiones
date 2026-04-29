@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IAM · Sistema de Comisiones</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F6F3;--bg2:#EEECEA;--bg3:#E4E2DE;
+  --white:#FFFFFF;--border:#D6D4CF;--border2:#C4C2BC;
+  --text:#1A1917;--text2:#5C5A56;--text3:#9B9995;
+  --blue:#1B4FD8;--blue-l:#EBF0FD;--blue-d:#1340B0;
+  --green:#1A6B3C;--green-l:#E8F5EE;
+  --amber:#92540A;--amber-l:#FDF3E3;
+  --red:#B91C1C;--red-l:#FEF2F2;
+  --gray-l:#F1F0EC;--gray-d:#6B6966;
+  --radius:8px;--radius-lg:12px;
+  --shadow:0 1px 3px rgba(0,0,0,0.08);
+}
+body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+.hidden{display:none!important}
+
+/* LOGIN */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.login-wrap{width:380px}
+.login-header{text-align:center;margin-bottom:32px}
+.login-header .brand{font-size:11px;font-weight:normal;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.login-header h1{font-size:28px;font-weight:normal;color:var(--text);letter-spacing:-0.5px}
+.login-header .tagline{font-size:12px;color:var(--text3);margin-top:6px;font-style:italic}
+.login-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;box-shadow:var(--shadow)}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:normal;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.field input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;transition:border 0.15s}
+.field input:focus{outline:none;border-color:var(--blue);background:var(--white)}
+.btn-login{width:100%;padding:11px;background:var(--blue);color:white;border:none;border-radius:var(--radius);font-size:13px;font-family:inherit;cursor:pointer;letter-spacing:0.03em;margin-top:4px;transition:background 0.15s}
+.btn-login:hover{background:var(--blue-d)}
+.login-error{font-size:12px;color:var(--red);background:var(--red-l);border-radius:var(--radius);padding:8px 12px;margin-bottom:14px;display:none;border:1px solid #FCA5A5}
+.login-footer{text-align:center;font-size:11px;color:var(--text3);margin-top:20px;letter-spacing:0.04em}
+.demo-hint{margin-top:16px;padding:12px;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border)}
+.demo-hint p{font-size:11px;color:var(--text3);margin-bottom:6px;letter-spacing:0.05em;text-transform:uppercase}
+.demo-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:var(--text2)}
+.demo-row span:last-child{color:var(--text3);font-style:italic}
+
+/* APP LAYOUT */
+#app-screen{display:flex;height:100vh;background:var(--bg)}
+.sidebar{width:210px;min-width:210px;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sb-brand{padding:20px 18px 16px;border-bottom:1px solid var(--border)}
+.sb-brand .co{font-size:18px;letter-spacing:-0.3px;color:var(--text)}
+.sb-brand .sub{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-top:2px}
+.sb-user{margin:12px 10px;background:var(--bg);border-radius:var(--radius);padding:10px 12px;border:1px solid var(--border)}
+.sb-user .uname{font-size:13px;color:var(--text)}
+.sb-user .urole{font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--text3);margin-top:2px}
+.nav-sec{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);padding:14px 18px 5px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 18px;font-size:13px;color:var(--text2);cursor:pointer;transition:all 0.1s;font-family:inherit}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:var(--blue-l);color:var(--blue);border-left:2px solid var(--blue)}
+.nav-item .ni{font-size:13px;width:16px;text-align:center}
+.nav-bottom{margin-top:auto;padding:12px 10px;border-top:1px solid var(--border)}
+.btn-logout{width:100%;padding:8px;font-size:12px;background:transparent;border:1px solid var(--border);border-radius:var(--radius);color:var(--text3);cursor:pointer;font-family:inherit;letter-spacing:0.04em;transition:all 0.15s}
+.btn-logout:hover{background:var(--red-l);color:var(--red);border-color:#FCA5A5}
+
+/* MAIN */
+.main{flex:1;overflow:auto;display:flex;flex-direction:column;min-width:0}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-left h2{font-size:16px;font-weight:normal;letter-spacing:-0.2px}
+.topbar-left p{font-size:11px;color:var(--text3);margin-top:2px;letter-spacing:0.03em}
+.topbar-right{font-size:11px;color:var(--text3);letter-spacing:0.05em;text-transform:uppercase}
+.content{padding:22px 24px;flex:1}
+
+/* PAGES */
+.page{display:none}.page.active{display:block}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px}
+.kpi-label{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.kpi-value{font-size:24px;font-weight:normal;color:var(--text);letter-spacing:-0.5px}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:4px}
+.badge{font-size:10px;padding:2px 8px;border-radius:20px;display:inline-block;margin-top:5px;letter-spacing:0.04em}
+.bg{background:var(--green-l);color:var(--green)}.bb{background:var(--blue-l);color:var(--blue)}.bw{background:var(--amber-l);color:var(--amber)}.br{background:var(--red-l);color:var(--red)}.bgr{background:var(--gray-l);color:var(--gray-d)}
+
+/* PANELS */
+.panel{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;margin-bottom:16px}
+.panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.panel-title{font-size:13px;letter-spacing:0.02em;color:var(--text)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;font-size:10px;font-weight:normal;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);padding:6px 10px;border-bottom:1px solid var(--border)}
+td{padding:8px 10px;border-bottom:1px solid var(--bg2);color:var(--text2)}
+tr:hover td{background:var(--bg)}
+.pill{font-size:10px;padding:2px 8px;border-radius:20px;display:inline-block;letter-spacing:0.03em}
+.pg{background:var(--green-l);color:var(--green)}.pb{background:var(--blue-l);color:var(--blue)}.pw{background:var(--amber-l);color:var(--amber)}.pr{background:var(--red-l);color:var(--red)}.pgr{background:var(--gray-l);color:var(--gray-d)}
+
+/* BARS */
+.bar-wrap{background:var(--bg3);border-radius:20px;height:4px;margin-top:5px;overflow:hidden}
+.bar-fill{height:4px;border-radius:20px}
+
+/* FORM */
+.form-row{margin-bottom:13px}
+.form-row label{display:block;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
+.form-row input,.form-row select{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;transition:border 0.15s}
+.form-row input:focus,.form-row select:focus{outline:none;border-color:var(--blue);background:var(--white)}
+.btn-primary{padding:9px 16px;background:var(--blue);color:white;border:none;border-radius:var(--radius);font-size:12px;font-family:inherit;cursor:pointer;letter-spacing:0.03em;transition:background 0.15s}
+.btn-primary:hover{background:var(--blue-d)}
+.btn-primary.full{width:100%;padding:10px;margin-top:6px}
+.btn-secondary{padding:7px 14px;font-size:12px;background:transparent;border:1px solid var(--border);border-radius:var(--radius);color:var(--text2);cursor:pointer;font-family:inherit}
+.btn-secondary:hover{background:var(--bg)}
+.btn-danger{padding:7px 14px;font-size:12px;background:transparent;border:1px solid #FCA5A5;border-radius:var(--radius);color:var(--red);cursor:pointer;font-family:inherit}
+.btn-danger:hover{background:var(--red-l)}
+.btn-add{padding:7px 14px;font-size:12px;background:var(--blue-l);border:1px solid var(--blue);border-radius:var(--radius);color:var(--blue);cursor:pointer;font-family:inherit;letter-spacing:0.02em}
+.btn-add:hover{background:var(--blue);color:white}
+
+/* RESULT */
+.result-block{background:var(--blue-l);border:1px solid #BFCFF8;border-radius:var(--radius-lg);padding:16px;margin-top:10px}
+.rrow{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid #D4DEFA;color:var(--text2)}
+.rrow:last-child{border:none;font-size:13px;padding-top:8px;color:var(--text)}
+.rrow .rl{color:var(--blue)}.rrow .rv{color:var(--blue-d);font-weight:bold}
+.result-section{margin-top:12px;padding-top:12px;border-top:1px solid #BFCFF8}
+.result-section-title{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--blue);margin-bottom:8px}
+
+/* USERS */
+.user-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:16px}
+.user-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px}
+.user-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;margin-bottom:10px;letter-spacing:0.03em}
+.ua-admin{background:var(--blue-l);color:var(--blue)}.ua-operador{background:var(--green-l);color:var(--green)}.ua-consulta{background:var(--amber-l);color:var(--amber)}.ua-captador{background:var(--gray-l);color:var(--gray-d)}
+.user-card-name{font-size:13px;color:var(--text);margin-bottom:3px}
+.user-card-user{font-size:11px;color:var(--text3);margin-bottom:8px;font-style:italic}
+.user-card-actions{display:flex;gap:6px;margin-top:10px}
+.perm-table td{padding:6px 10px}.perm-table th{padding:6px 10px}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(26,25,23,0.5);display:flex;align-items:center;justify-content:center;z-index:200}
+.modal{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.12)}
+.modal-title{font-size:15px;font-weight:normal;color:var(--text);margin-bottom:18px;letter-spacing:-0.2px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+
+/* ACCESS DENIED */
+.access-denied{text-align:center;padding:60px 20px;color:var(--text3)}
+.access-denied .icon{font-size:28px;margin-bottom:12px;opacity:0.4}
+.access-denied p{font-size:13px;font-style:italic}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-wrap">
+    <div class="login-header">
+      <div class="brand">Inkapital Asset Management</div>
+      <h1>Sistema de Comisiones</h1>
+      <div class="tagline">Gestión y cálculo de comisiones a captadores</div>
+    </div>
+    <div class="login-card">
+      <div id="login-error" class="login-error">Usuario o contraseña incorrectos</div>
+      <div class="field">
+        <label>Usuario</label>
+        <input type="text" id="inp-user" placeholder="Ingrese su usuario" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" id="inp-pass" placeholder="Ingrese su contraseña" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn-login" onclick="doLogin()">Ingresar al sistema</button>
+      <div class="demo-hint">
+        <p>Usuarios de prueba</p>
+        <div class="demo-row"><span>admin</span><span>admin123 · Administrador</span></div>
+        <div class="demo-row"><span>operador</span><span>op2024 · Operador</span></div>
+        <div class="demo-row"><span>consulta</span><span>cons2024 · Consulta</span></div>
+        <div class="demo-row"><span>captador</span><span>cap2024 · Captador</span></div>
+      </div>
+    </div>
+    <div class="login-footer">Acceso restringido · Solo personal autorizado</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen" class="hidden">
+  <div class="sidebar">
+    <div class="sb-brand">
+      <div class="co">IAM</div>
+      <div class="sub">Comisiones Captadores</div>
+    </div>
+    <div class="sb-user">
+      <div class="uname" id="sb-uname">—</div>
+      <div class="urole" id="sb-urole">—</div>
+    </div>
+    <div class="nav-sec">Principal</div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)" id="nav-dashboard"><span class="ni">▦</span> Dashboard</div>
+    <div class="nav-item" onclick="showPage('inversiones',this)" id="nav-inversiones"><span class="ni">◈</span> Inversiones</div>
+    <div class="nav-sec">Comisiones</div>
+    <div class="nav-item" onclick="showPage('calculo',this)" id="nav-calculo"><span class="ni">⊞</span> Calcular</div>
+    <div class="nav-item" onclick="showPage('devengados',this)" id="nav-devengados"><span class="ni">⊡</span> Devengados</div>
+    <div class="nav-item" onclick="showPage('proyeccion',this)" id="nav-proyeccion"><span class="ni">↗</span> Proyección</div>
+    <div class="nav-sec">Reportes</div>
+    <div class="nav-item" onclick="showPage('pagar',this)" id="nav-pagar"><span class="ni">◉</span> Por Pagar</div>
+    <div class="nav-item" onclick="showPage('pagadas',this)" id="nav-pagadas"><span class="ni">✓</span> Pagadas</div>
+    <div class="nav-item" onclick="showPage('usuarios',this)" id="nav-usuarios" style="display:none"><span class="ni">⊙</span> Usuarios</div>
+    <div class="nav-bottom">
+      <button class="btn-logout" onclick="doLogout()">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2 id="page-title">Dashboard</h2>
+        <p id="page-sub">Resumen general</p>
+      </div>
+      <div class="topbar-right">Corte · Abr 2026</div>
+    </div>
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-label">Total comisiones activas</div><div class="kpi-value">S/ 248,703</div><div class="kpi-sub">291 registros</div></div>
+          <div class="kpi"><div class="kpi-label">Devengado acumulado</div><div class="kpi-value">S/ 186,521</div><div class="badge bg">75% devengado</div></div>
+          <div class="kpi"><div class="kpi-label">Por pagar 90 días</div><div class="kpi-value">S/ 62,182</div><div class="badge bw">Pendiente</div></div>
+          <div class="kpi"><div class="kpi-label">Inversiones vigentes</div><div class="kpi-value">47</div><div class="badge bb">IAM + Fondos</div></div>
+        </div>
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-header"><span class="panel-title">Distribución por fondo</span></div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;color:var(--text2)"><span>1 IAM Inversiones</span><span>S/ 142,340</span></div><div class="bar-wrap"><div class="bar-fill" style="width:57%;background:var(--blue)"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;color:var(--text2)"><span>2 IAM Medicash PEN</span><span>S/ 78,290</span></div><div class="bar-wrap"><div class="bar-fill" style="width:31%;background:var(--green)"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;color:var(--text2)"><span>3 Fondo Facturas USD</span><span>S/ 28,073</span></div><div class="bar-wrap"><div class="bar-fill" style="width:11%;background:var(--amber)"></div></div></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><span class="panel-title">Últimas operaciones</span></div>
+            <table><thead><tr><th>Inversionista</th><th>Monto</th><th>Comisión</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr><td>Arellano Salas Ana Sofia</td><td>USD 100k</td><td>$2,360</td><td><span class="pill pg">Pagado</span></td></tr>
+              <tr><td>Donayres Montesinos C.</td><td>PEN 50k</td><td>S/3,270</td><td><span class="pill pg">Pagado</span></td></tr>
+              <tr><td>Iparraguirre Carrillo C.</td><td>PEN 200k</td><td>S/8,696</td><td><span class="pill pw">Devengando</span></td></tr>
+              <tr><td>San Martin Mauricio G.</td><td>PEN 100k</td><td>S/3,000</td><td><span class="pill pg">Pagado</span></td></tr>
+            </tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- INVERSIONES -->
+      <div class="page" id="page-inversiones">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Registro de inversiones</span><span id="inv-count" style="font-size:11px;color:var(--text3)"></span></div>
+          <div style="overflow-x:auto">
+          <table><thead><tr><th>Código</th><th>Inversionista</th><th>Fondo</th><th>Mon</th><th>Monto</th><th>Tipo</th><th>Estado</th><th>Referidor</th><th>Comisión</th><th>Pago</th></tr></thead>
+          <tbody id="inv-tbody"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- CALCULO -->
+      <div class="page" id="page-calculo">
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-header"><span class="panel-title">Parámetros de la operación</span></div>
+            <div class="form-row"><label>Vehículo de inversión</label><select id="c-fondo" onchange="calcular()"><option value="IAM">Inversión en IAM (gestora)</option><option value="FONDO">Inversión en Fondo</option></select></div>
+            <div class="form-row"><label>Tipo de operación</label><select id="c-tipo" onchange="calcular()"><option value="CAP">Captación nueva</option><option value="REN">Renovación</option></select></div>
+            <div class="form-row"><label>Esquema de captación</label><select id="c-esquema" onchange="calcular()">
+              <option value="SIN">Sin captador externo</option>
+              <option value="CON">Con captador externo</option>
+              <option value="CERCANO">Captador externo cercano</option>
+              <option value="PLACEMENT">Placement Financial SAC</option>
+              <option value="PATZL">Especial: Patzl</option>
+              <option value="ARTURO">Especial: Arturo Ríos</option>
+            </select></div>
+            <div class="form-row"><label>Moneda</label><select id="c-mon" onchange="calcular()"><option>USD</option><option>PEN</option></select></div>
+            <div class="form-row"><label>Monto de inversión</label><input type="number" id="c-monto" value="100000" oninput="calcular()"></div>
+            <div class="form-row"><label>Fecha inicio</label><input type="date" id="c-ini" oninput="calcular()"></div>
+            <div class="form-row"><label>Fecha fin (inversionista)</label><input type="date" id="c-fin" oninput="calcular()"></div>
+            <button class="btn-primary full" onclick="calcular()">Calcular comisiones</button>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><span class="panel-title">Distribución de comisiones</span></div>
+            <div id="calc-res"><div style="font-size:12px;color:var(--text3);padding:30px 0;text-align:center;font-style:italic">Complete los parámetros y presione Calcular</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEVENGADOS -->
+      <div class="page" id="page-devengados">
+        <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="kpi"><div class="kpi-label">Total a devengar</div><div class="kpi-value">S/ 248,703</div></div>
+          <div class="kpi"><div class="kpi-label">Devengado a la fecha</div><div class="kpi-value">S/ 186,521</div><div class="badge bg">75%</div></div>
+          <div class="kpi"><div class="kpi-label">Por devengar</div><div class="kpi-value">S/ 62,182</div><div class="badge bw">25%</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Devengado mensual por empresa</span></div>
+          <table><thead><tr><th>Empresa</th><th>Referidor</th><th>Com. base</th><th>Ene 25</th><th>Feb 25</th><th>Mar 25</th><th>Abr 25</th><th>Devengado</th><th>Por devengar</th></tr></thead>
+          <tbody>
+            <tr><td>1 Inkapital</td><td>Delfino Gabriela</td><td>S/ 2,283</td><td>343</td><td>343</td><td>343</td><td>343</td><td><span style="color:var(--green)">S/ 2,283</span></td><td><span style="color:var(--amber)">S/ 0</span></td></tr>
+            <tr><td>1 Inkapital</td><td>Castro Luis Martin</td><td>S/ 6,522</td><td>0</td><td>0</td><td>652</td><td>1,304</td><td><span style="color:var(--green)">S/ 3,794</span></td><td><span style="color:var(--amber)">S/ 2,728</span></td></tr>
+            <tr><td>2 IAM Medicash</td><td>Delfino Gabriela</td><td>S/ 13,043</td><td>0</td><td>0</td><td>1,304</td><td>2,174</td><td><span style="color:var(--green)">S/ 9,909</span></td><td><span style="color:var(--amber)">S/ 3,134</span></td></tr>
+            <tr><td>3 Fondo USD</td><td>Placement Financial</td><td>S/ 1,200</td><td>200</td><td>200</td><td>200</td><td>200</td><td><span style="color:var(--green)">S/ 1,200</span></td><td><span style="color:var(--amber)">S/ 0</span></td></tr>
+          </tbody></table>
+        </div>
+      </div>
+
+      <!-- PROYECCION -->
+      <div class="page" id="page-proyeccion">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Proyección de comisiones futuras</span>
+            <select id="proy-esc" onchange="renderProy()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit">
+              <option value="1">Escenario base</option>
+              <option value="1.2">Optimista (+20%)</option>
+              <option value="0.8">Conservador (-20%)</option>
+            </select>
+          </div>
+          <table><thead><tr><th>Periodo</th><th>Captaciones est.</th><th>Renovaciones est.</th><th>Com. estimadas</th><th>Asume IAM</th><th>Asume Fondos</th></tr></thead>
+          <tbody id="proy-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- POR PAGAR -->
+      <div class="page" id="page-pagar">
+        <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="kpi"><div class="kpi-label">Próximos 30 días</div><div class="kpi-value">S/ 18,340</div><div class="badge bw">8 referidores</div></div>
+          <div class="kpi"><div class="kpi-label">31 a 90 días</div><div class="kpi-value">S/ 28,750</div><div class="badge bb">12 referidores</div></div>
+          <div class="kpi"><div class="kpi-label">Más de 90 días</div><div class="kpi-value">S/ 15,092</div><div class="badge bg">9 referidores</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Comisiones pendientes de pago</span></div>
+          <table><thead><tr><th>Referidor</th><th>Tipo</th><th>Fondo</th><th>Com. base</th><th>Devengado</th><th>Por pagar</th><th>Fecha est.</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Placement Financial SAC</td><td>Externo</td><td>IAM Inversiones</td><td>S/ 3,000</td><td>S/ 3,000</td><td>S/ 3,000</td><td>May 2026</td><td><span class="pill pw">Pendiente</span></td></tr>
+            <tr><td>Delfino Villa Garcia Gabriela</td><td>Int. A</td><td>Medicash PEN</td><td>S/ 5,435</td><td>S/ 5,110</td><td>S/ 5,110</td><td>May 2026</td><td><span class="pill pw">Pendiente</span></td></tr>
+            <tr><td>Castro Echecopar Luis Martin</td><td>Int. B</td><td>IAM Inversiones</td><td>S/ 6,522</td><td>S/ 3,794</td><td>S/ 3,794</td><td>Jun 2026</td><td><span class="pill pb">En proceso</span></td></tr>
+            <tr><td>Rios Tipiani Arturo Francisco</td><td>Externo</td><td>IAM Inversiones</td><td>S/ 1,875</td><td>S/ 1,875</td><td>S/ 1,875</td><td>May 2026</td><td><span class="pill pw">Pendiente</span></td></tr>
+          </tbody></table>
+        </div>
+      </div>
+
+      <!-- PAGADAS -->
+      <div class="page" id="page-pagadas">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Historial de comisiones pagadas</span></div>
+          <table><thead><tr><th>Código</th><th>Inversionista</th><th>Referidor</th><th>Documento</th><th>Moneda</th><th>Com. base</th><th>IGV/IR</th><th>Total pagado</th><th>Doc.</th></tr></thead>
+          <tbody>
+            <tr><td>0100000006</td><td>Riveros Grimaldi Alejandro</td><td>Rios Tipiani Arturo</td><td>E001-025</td><td>PEN</td><td>1,200</td><td>—</td><td><strong>S/ 1,200</strong></td><td><span class="pill pg">CON DOC</span></td></tr>
+            <tr><td>0100000020</td><td>Gubbins Doberti Jorge</td><td>Gama Investment SAC</td><td>E001-025 FT</td><td>USD</td><td>750</td><td>—</td><td><strong>$ 750</strong></td><td><span class="pill pg">CON DOC</span></td></tr>
+            <tr><td>0200000003</td><td>Rios Grimaldi Arturo Alfonso</td><td>Rios Tipiani Arturo</td><td>E001-045</td><td>PEN</td><td>6,000</td><td>—</td><td><strong>S/ 6,000</strong></td><td><span class="pill pg">CON DOC</span></td></tr>
+            <tr><td>0200000011</td><td>San Martin Mauricio</td><td>Placement Financial</td><td>E001-023 FT</td><td>PEN</td><td>3,000</td><td>540</td><td><strong>S/ 3,540</strong></td><td><span class="pill pg">CON DOC</span></td></tr>
+          </tbody></table>
+        </div>
+      </div>
+
+      <!-- USUARIOS -->
+      <div class="page" id="page-usuarios">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Gestión de usuarios del sistema</span>
+            <button class="btn-add" onclick="abrirModal()">+ Nuevo usuario</button>
+          </div>
+          <div id="user-grid"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Permisos por perfil de acceso</span></div>
+          <table class="perm-table"><thead><tr><th>Módulo</th><th>Administrador</th><th>Operador</th><th>Consulta</th><th>Captador</th></tr></thead>
+          <tbody>
+            <tr><td>Dashboard</td><td><span class="pill pg">✓ Ver</span></td><td><span class="pill pg">✓ Ver</span></td><td><span class="pill pg">✓ Ver</span></td><td><span class="pill pg">✓ Ver</span></td></tr>
+            <tr><td>Inversiones</td><td><span class="pill pg">✓ Completo</span></td><td><span class="pill pg">✓ Completo</span></td><td><span class="pill pb">Solo ver</span></td><td><span class="pill pgr">Solo las suyas</span></td></tr>
+            <tr><td>Calcular</td><td><span class="pill pg">✓</span></td><td><span class="pill pg">✓</span></td><td><span class="pill pg">✓</span></td><td><span class="pill pg">✓</span></td></tr>
+            <tr><td>Devengados</td><td><span class="pill pg">✓</span></td><td><span class="pill pg">✓</span></td><td><span class="pill pg">✓</span></td><td><span class="pill pgr">Solo los suyos</span></td></tr>
+            <tr><td>Proyección</td><td><span class="pill pg">✓</span></td><td><span class="pill pg">✓</span></td><td><span class="pill pg">✓</span></td><td><span class="pill pr">Sin acceso</span></td></tr>
+            <tr><td>Por pagar / Pagadas</td><td><span class="pill pg">✓</span></td><td><span class="pill pg">✓</span></td><td><span class="pill pg">✓</span></td><td><span class="pill pgr">Solo los suyos</span></td></tr>
+            <tr><td>Gestión de usuarios</td><td><span class="pill pg">✓ Completo</span></td><td><span class="pill pr">Sin acceso</span></td><td><span class="pill pr">Sin acceso</span></td><td><span class="pill pr">Sin acceso</span></td></tr>
+          </tbody></table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal-bg hidden">
+  <div class="modal">
+    <div class="modal-title" id="modal-titulo">Nuevo usuario</div>
+    <div class="form-row"><label>Nombre completo</label><input type="text" id="mu-nombre" placeholder="Ej: María García"></div>
+    <div class="form-row"><label>Usuario (para el login)</label><input type="text" id="mu-user" placeholder="Ej: mgarcia"></div>
+    <div class="form-row"><label>Contraseña</label><input type="password" id="mu-pass" placeholder="Mínimo 6 caracteres"></div>
+    <div class="form-row"><label>Perfil de acceso</label>
+      <select id="mu-rol">
+        <option value="admin">Administrador</option>
+        <option value="operador">Operador</option>
+        <option value="consulta">Consulta</option>
+        <option value="captador">Captador</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-primary" onclick="guardarUsuario()">Guardar usuario</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ROLES={admin:'Administrador',operador:'Operador',consulta:'Consulta',captador:'Captador'};
+let usuarios=[
+  {id:1,nombre:'Franco Canaza',user:'admin',pass:'admin123',rol:'admin'},
+  {id:2,nombre:'María Operaciones',user:'operador',pass:'op2024',rol:'operador'},
+  {id:3,nombre:'Juan Consultor',user:'consulta',pass:'cons2024',rol:'consulta'},
+  {id:4,nombre:'Arturo Ríos',user:'captador',pass:'cap2024',rol:'captador'},
+];
+let currentUser=null,editId=null;
+
+function doLogin(){
+  const u=document.getElementById('inp-user').value.trim();
+  const p=document.getElementById('inp-pass').value;
+  const found=usuarios.find(x=>x.user===u&&x.pass===p);
+  if(!found){document.getElementById('login-error').style.display='block';document.getElementById('inp-pass').value='';return;}
+  document.getElementById('login-error').style.display='none';
+  currentUser=found;
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app-screen').classList.remove('hidden');
+  document.getElementById('sb-uname').textContent=found.nombre;
+  document.getElementById('sb-urole').textContent=ROLES[found.rol];
+  document.getElementById('nav-usuarios').style.display=found.rol==='admin'?'flex':'none';
+  renderInv();initCalc();renderProy();
+}
+
+function doLogout(){
+  currentUser=null;
+  document.getElementById('app-screen').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('inp-user').value='';document.getElementById('inp-pass').value='';
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-dashboard').classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('nav-dashboard').classList.add('active');
+}
+
+const PAGES={dashboard:{t:'Dashboard',s:'Resumen general · IAM Inkapital'},inversiones:{t:'Inversiones',s:'Registro de inversiones y comisiones'},calculo:{t:'Calcular comisiones',s:'Motor de cálculo según política IAM'},devengados:{t:'Comisiones devengadas',s:'Devengado por empresa, año y mes'},proyeccion:{t:'Proyección',s:'Estimación de comisiones futuras'},pagar:{t:'Por pagar',s:'Comisiones pendientes de pago'},pagadas:{t:'Pagadas',s:'Historial de comisiones pagadas'},usuarios:{t:'Gestión de usuarios',s:'Administración de accesos al sistema'}};
+
+function showPage(id,el){
+  const restricted={usuarios:['admin'],proyeccion:['admin','operador','consulta']};
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const pg=document.getElementById('page-'+id);
+  if(restricted[id]&&!restricted[id].includes(currentUser?.rol)){
+    pg.innerHTML='<div class="access-denied"><div class="icon">⊘</div><p>No tienes permiso para acceder a este módulo.</p></div>';
+  }
+  pg.classList.add('active');el.classList.add('active');
+  document.getElementById('page-title').textContent=PAGES[id].t;
+  document.getElementById('page-sub').textContent=PAGES[id].s;
+  if(id==='usuarios')renderUsuarios();
+}
+
+const INV=[
+  {cod:'0100000091',inv:'Arellano Salas Ana Sofia',fondo:'IAM Inversiones',mon:'USD',monto:'100,000',tipo:'Renovación',estado:'TERMINADO',ref:'De Albertis Sergio',com:'2,360',pago:'PAGADO'},
+  {cod:'0200000037',inv:'Donayres Montesinos Christian',fondo:'Medicash PEN',mon:'PEN',monto:'50,000',tipo:'Captación',estado:'TERMINADO',ref:'Placement Financial',com:'3,270',pago:'PAGADO'},
+  {cod:'0200000038',inv:'Avila Carrasco Ayde',fondo:'Medicash PEN',mon:'PEN',monto:'60,000',tipo:'Captación',estado:'TERMINADO',ref:'Delfino Gabriela',com:'2,700',pago:'PAGADO'},
+  {cod:'0300000029',inv:'Gubbins Doberti Jorge',fondo:'Fondo Facturas USD',mon:'USD',monto:'40,000',tipo:'Captación',estado:'TERMINADO',ref:'Placement Financial',com:'944',pago:'PAGADO'},
+  {cod:'0100000080',inv:'Iparraguirre Carrillo Carlos',fondo:'IAM Inversiones',mon:'PEN',monto:'200,000',tipo:'Captación',estado:'TERMINADO',ref:'Castro Luis Martin',com:'8,696',pago:'PAGADO'},
+  {cod:'0200000034',inv:'San Martin Mauricio Gustavo',fondo:'Medicash PEN',mon:'PEN',monto:'100,000',tipo:'Captación',estado:'TERMINADO',ref:'Placement Financial',com:'3,540',pago:'PAGADO'},
+  {cod:'0100000079',inv:'Iparraguirre Autero Carlos',fondo:'IAM Inversiones',mon:'PEN',monto:'200,000',tipo:'Captación',estado:'RESCATE',ref:'Castro Luis Martin',com:'0',pago:'NO APLICA'},
+  {cod:'0200000032',inv:'Lau Chung Blanca',fondo:'Medicash PEN',mon:'PEN',monto:'50,000',tipo:'Captación',estado:'TERMINADO',ref:'Chang Lau Karin',com:'1,500',pago:'PAGADO'},
+];
+
+function renderInv(){
+  const data=currentUser?.rol==='captador'?INV.filter(r=>r.ref.includes('Rios')):INV;
+  document.getElementById('inv-count').textContent=data.length+' registros';
+  document.getElementById('inv-tbody').innerHTML=data.map(r=>`<tr><td>${r.cod}</td><td>${r.inv}</td><td>${r.fondo}</td><td>${r.mon}</td><td style="text-align:right">${r.monto}</td><td><span class="pill ${r.tipo==='Captación'?'pw':'pb'}">${r.tipo}</span></td><td><span class="pill ${r.estado==='TERMINADO'?'pg':r.estado==='RESCATE'?'pr':'pw'}">${r.estado}</span></td><td>${r.ref}</td><td style="text-align:right">${r.mon==='USD'?'$':'S/'} ${r.com}</td><td><span class="pill ${r.pago==='PAGADO'?'pg':r.pago==='NO APLICA'?'pgr':'pw'}">${r.pago}</span></td></tr>`).join('');
+}
+
+const POL={CAP:{IAM:{SIN:{tot:0.06,A:0.045,B:0.015,ext:0,fon:0.03},CON:{tot:0.06,A:0.02625,B:0.00875,ext:0.025,fon:0.025},CERCANO:{tot:0.06,A:0.0225,B:0.0075,ext:0.03,fon:0.03},PLACEMENT:{tot:0.06,A:0.015,B:0.005,ext:0.03,fon:0.03},PATZL:{tot:0.06,A:0.015,B:0.005,ext:0.025,fon:0.025},ARTURO:{tot:0.06,A:0.015,B:0.005,ext:0.03,fon:0.03}},FONDO:{SIN:{tot:0.03,A:0.015,B:0.015,ext:0,fon:0.03},CON:{tot:0.035,A:0.02625,B:0.00875,ext:0,fon:0.025},CERCANO:{tot:0.03,A:0.0225,B:0.0075,ext:0,fon:0.03},PLACEMENT:{tot:0.03,A:0.015,B:0.015,ext:0.03,fon:0.03},PATZL:{tot:0.03,A:0.015,B:0.015,ext:0.025,fon:0.025},ARTURO:{tot:0.03,A:0.015,B:0.015,ext:0.03,fon:0.03}}},REN:{IAM:{SIN:{tot:0.03,A:0.0225,B:0.0075,ext:0,fon:0.015},CON:{tot:0.03,A:0.013125,B:0.004375,ext:0.0125,fon:0.0125},CERCANO:{tot:0.04,A:0.0121,B:0.0079,ext:0.02,fon:0.02},PLACEMENT:{tot:0.04315,A:0.01125,B:0.0069,ext:0.025,fon:0.025},PATZL:{tot:0.03,A:0.01125,B:0.00388,ext:0.0125,fon:0.0125},ARTURO:{tot:0.03,A:0.0112,B:0.0038,ext:0.015,fon:0.015}},FONDO:{SIN:{tot:0.015,A:0.0075,B:0.0075,ext:0,fon:0.015},CON:{tot:0.0175,A:0.013125,B:0.004375,ext:0,fon:0.0125},CERCANO:{tot:0.02,A:0.0121,B:0.0079,ext:0,fon:0.02},PLACEMENT:{tot:0.018,A:0.01125,B:0.0069,ext:0,fon:0.025},PATZL:{tot:0.0175,A:0.01125,B:0.00388,ext:0,fon:0.0125},ARTURO:{tot:0.015,A:0.0112,B:0.0038,ext:0,fon:0.015}}}};
+
+function initCalc(){
+  const t=new Date(),fy=new Date(t);fy.setFullYear(fy.getFullYear()+1);
+  document.getElementById('c-ini').value=t.toISOString().split('T')[0];
+  document.getElementById('c-fin').value=fy.toISOString().split('T')[0];
+  calcular();
+}
+
+function calcular(){
+  const f=document.getElementById('c-fondo').value,t=document.getElementById('c-tipo').value,e=document.getElementById('c-esquema').value;
+  const m=parseFloat(document.getElementById('c-monto').value)||0,mon=document.getElementById('c-mon').value;
+  const ini=document.getElementById('c-ini').value,fin=document.getElementById('c-fin').value;
+  const p=POL[t]?.[f]?.[e];
+  if(!p){document.getElementById('calc-res').innerHTML='<div style="font-size:12px;color:var(--text3);padding:20px;text-align:center;font-style:italic">Combinación no disponible</div>';return;}
+  const s=mon==='USD'?'$':'S/';
+  const fmt=n=>`${s} ${n.toFixed(2)}`;
+  const pct=n=>`(${(n*100).toFixed(2)}%)`;
+  let dias=0;if(ini&&fin)dias=Math.max(0,Math.round((new Date(fin)-new Date(ini))/86400000));
+  const rows=[
+    `<div class="rrow"><span class="rl">Comisión total</span><span class="rv">${fmt(m*p.tot)} ${pct(p.tot)}</span></div>`,
+    e!=='SIN'?`<div class="rrow"><span class="rl">Captador externo</span><span class="rv">${fmt(m*p.ext)} ${pct(p.ext)}</span></div>`:'',
+    `<div class="rrow"><span class="rl">Captador interno A</span><span class="rv">${fmt(m*p.A)} ${pct(p.A)}</span></div>`,
+    `<div class="rrow"><span class="rl">Captador interno B</span><span class="rv">${fmt(m*p.B)} ${pct(p.B)}</span></div>`,
+    `<div class="result-section"><div class="result-section-title">Distribución institucional</div>`,
+    `<div class="rrow"><span class="rl">Asume IAM</span><span class="rv">${fmt(m*p.tot-m*p.fon)}</span></div>`,
+    `<div class="rrow"><span class="rl">Asume Fondo</span><span class="rv">${fmt(m*p.fon)}</span></div></div>`,
+    dias>0?`<div style="margin-top:12px;font-size:12px;color:var(--text2)">Devengado diario: <strong>${fmt(m*p.tot/dias)}</strong> · plazo ${dias} días</div>`:'',
+  ].join('');
+  document.getElementById('calc-res').innerHTML=`<div class="result-block">${rows}</div>`;
+}
+
+function renderProy(){
+  const mult=parseFloat(document.getElementById('proy-esc').value)||1;
+  const base=[{m:'May 2026',c:280000,r:150000},{m:'Jun 2026',c:320000,r:180000},{m:'Jul 2026',c:250000,r:200000},{m:'Ago 2026',c:300000,r:160000},{m:'Set 2026',c:350000,r:220000},{m:'Oct 2026',c:280000,r:190000}];
+  document.getElementById('proy-tbody').innerHTML=base.map(b=>{
+    const tc=b.c*0.06*mult,tr=b.r*0.03*mult,tot=tc+tr;
+    return `<tr><td>${b.m}</td><td>S/ ${Math.round(b.c*mult).toLocaleString()}</td><td>S/ ${Math.round(b.r*mult).toLocaleString()}</td><td><strong>S/ ${Math.round(tot).toLocaleString()}</strong></td><td>S/ ${Math.round(tot*0.6).toLocaleString()}</td><td>S/ ${Math.round(tot*0.4).toLocaleString()}</td></tr>`;
+  }).join('');
+}
+
+function renderUsuarios(){
+  document.getElementById('user-grid').innerHTML=`<div class="user-grid">${usuarios.map(u=>`<div class="user-card"><div class="user-avatar ua-${u.rol}">${u.nombre.split(' ').map(x=>x[0]).slice(0,2).join('')}</div><div class="user-card-name">${u.nombre}</div><div class="user-card-user">@${u.user} · <span class="pill ${u.rol==='admin'?'pb':u.rol==='operador'?'pg':u.rol==='consulta'?'pw':'pgr'}">${ROLES[u.rol]}</span></div><div class="user-card-actions"><button class="btn-secondary" style="font-size:11px;padding:4px 10px" onclick="editarUsuario(${u.id})">Editar</button>${u.user!==currentUser.user?`<button class="btn-danger" style="font-size:11px;padding:4px 10px" onclick="eliminarUsuario(${u.id})">Eliminar</button>`:'<span style="font-size:10px;color:var(--text3);padding:4px 6px;font-style:italic">Tú</span>'}</div></div>`).join('')}</div>`;
+}
+
+function abrirModal(){editId=null;document.getElementById('modal-titulo').textContent='Nuevo usuario';document.getElementById('mu-nombre').value='';document.getElementById('mu-user').value='';document.getElementById('mu-pass').value='';document.getElementById('mu-rol').value='operador';document.getElementById('modal').classList.remove('hidden');}
+function editarUsuario(id){const u=usuarios.find(x=>x.id===id);if(!u)return;editId=id;document.getElementById('modal-titulo').textContent='Editar usuario';document.getElementById('mu-nombre').value=u.nombre;document.getElementById('mu-user').value=u.user;document.getElementById('mu-pass').value=u.pass;document.getElementById('mu-rol').value=u.rol;document.getElementById('modal').classList.remove('hidden');}
+function guardarUsuario(){
+  const nom=document.getElementById('mu-nombre').value.trim(),usr=document.getElementById('mu-user').value.trim(),pas=document.getElementById('mu-pass').value,rol=document.getElementById('mu-rol').value;
+  if(!nom||!usr||!pas){alert('Complete todos los campos');return;}
+  if(pas.length<6){alert('La contraseña debe tener al menos 6 caracteres');return;}
+  if(usuarios.find(x=>x.user===usr&&x.id!==editId)){alert('Ese usuario ya existe');return;}
+  if(editId)usuarios[usuarios.findIndex(x=>x.id===editId)]={id:editId,nombre:nom,user:usr,pass:pas,rol};
+  else usuarios.push({id:Date.now(),nombre:nom,user:usr,pass:pas,rol});
+  cerrarModal();renderUsuarios();
+}
+function eliminarUsuario(id){if(!confirm('¿Eliminar este usuario?'))return;usuarios=usuarios.filter(x=>x.id!==id);renderUsuarios();}
+function cerrarModal(){document.getElementById('modal').classList.add('hidden');}
+</script>
+</body>
+</html>
