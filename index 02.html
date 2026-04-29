@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IAM · Sistema de Comisiones</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F6F3;--bg2:#EEECEA;--bg3:#E4E2DE;
+  --white:#FFFFFF;--border:#D6D4CF;--border2:#C4C2BC;
+  --text:#1A1917;--text2:#5C5A56;--text3:#9B9995;
+  --blue:#1B4FD8;--blue-l:#EBF0FD;--blue-d:#1340B0;
+  --green:#1A6B3C;--green-l:#E8F5EE;
+  --amber:#92540A;--amber-l:#FDF3E3;
+  --red:#B91C1C;--red-l:#FEF2F2;
+  --gray-l:#F1F0EC;--gray-d:#6B6966;
+  --radius:8px;--radius-lg:12px;
+  --shadow:0 1px 3px rgba(0,0,0,0.08);
+}
+body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+.hidden{display:none!important}
+/* LOGIN */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center}
+.login-wrap{width:380px}
+.login-header{text-align:center;margin-bottom:28px}
+.login-header .brand{font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.login-header h1{font-size:26px;font-weight:normal;letter-spacing:-0.5px}
+.login-header .tagline{font-size:12px;color:var(--text3);margin-top:5px;font-style:italic}
+.login-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:26px;box-shadow:var(--shadow)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
+.field input{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit}
+.field input:focus{outline:none;border-color:var(--blue);background:var(--white)}
+.btn-login{width:100%;padding:10px;background:var(--blue);color:white;border:none;border-radius:var(--radius);font-size:13px;font-family:inherit;cursor:pointer;margin-top:4px}
+.btn-login:hover{background:var(--blue-d)}
+.login-error{font-size:12px;color:var(--red);background:var(--red-l);border-radius:var(--radius);padding:8px 12px;margin-bottom:12px;display:none;border:1px solid #FCA5A5}
+.login-footer{text-align:center;font-size:11px;color:var(--text3);margin-top:16px}
+.demo-hint{margin-top:14px;padding:10px 12px;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border)}
+.demo-hint p{font-size:10px;color:var(--text3);margin-bottom:5px;letter-spacing:0.06em;text-transform:uppercase}
+.demo-row{display:flex;justify-content:space-between;font-size:11px;padding:2px 0;color:var(--text2)}
+.demo-row span:last-child{color:var(--text3);font-style:italic}
+/* APP */
+#app-screen{display:flex;height:100vh;background:var(--bg)}
+.sidebar{width:205px;min-width:205px;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden}
+.sb-brand{padding:18px 16px 14px;border-bottom:1px solid var(--border)}
+.sb-brand .co{font-size:17px;letter-spacing:-0.3px}
+.sb-brand .sub{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-top:2px}
+.sb-user{margin:10px 8px;background:var(--bg);border-radius:var(--radius);padding:9px 11px;border:1px solid var(--border)}
+.sb-user .uname{font-size:12px}
+.sb-user .urole{font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--text3);margin-top:2px}
+.nav-sec{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);padding:12px 16px 4px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 16px;font-size:12px;color:var(--text2);cursor:pointer;font-family:inherit;transition:background 0.1s}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:var(--blue-l);color:var(--blue);border-left:2px solid var(--blue)}
+.nav-item .ni{font-size:12px;width:15px;text-align:center}
+.nav-bottom{margin-top:auto;padding:10px 8px;border-top:1px solid var(--border)}
+.btn-logout{width:100%;padding:7px;font-size:11px;background:transparent;border:1px solid var(--border);border-radius:var(--radius);color:var(--text3);cursor:pointer;font-family:inherit}
+.btn-logout:hover{background:var(--red-l);color:var(--red);border-color:#FCA5A5}
+.main{flex:1;overflow:auto;display:flex;flex-direction:column;min-width:0}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:12px 22px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-left h2{font-size:15px;font-weight:normal;letter-spacing:-0.2px}
+.topbar-left p{font-size:11px;color:var(--text3);margin-top:1px}
+.topbar-right{font-size:11px;color:var(--text3);letter-spacing:0.04em;text-align:right}
+.content{padding:20px 22px;flex:1}
+.page{display:none}.page.active{display:block}
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.kpi{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px}
+.kpi-label{font-size:10px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.kpi-value{font-size:22px;font-weight:normal;letter-spacing:-0.5px}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:3px}
+.badge{font-size:10px;padding:2px 7px;border-radius:20px;display:inline-block;margin-top:4px}
+.bg{background:var(--green-l);color:var(--green)}.bb{background:var(--blue-l);color:var(--blue)}.bw{background:var(--amber-l);color:var(--amber)}.br{background:var(--red-l);color:var(--red)}.bgr{background:var(--gray-l);color:var(--gray-d)}
+/* PANEL */
+.panel{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:14px}
+.panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.panel-title{font-size:13px;letter-spacing:0.02em}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;font-size:10px;font-weight:normal;letter-spacing:0.07em;text-transform:uppercase;color:var(--text3);padding:5px 9px;border-bottom:1px solid var(--border)}
+td{padding:7px 9px;border-bottom:1px solid var(--bg2);color:var(--text2)}
+tr:hover td{background:var(--bg)}
+.pill{font-size:10px;padding:2px 7px;border-radius:20px;display:inline-block}
+.pg{background:var(--green-l);color:var(--green)}.pb{background:var(--blue-l);color:var(--blue)}.pw{background:var(--amber-l);color:var(--amber)}.pr{background:var(--red-l);color:var(--red)}.pgr{background:var(--gray-l);color:var(--gray-d)}
+/* BAR */
+.bar-wrap{background:var(--bg3);border-radius:20px;height:4px;margin-top:4px;overflow:hidden}
+.bar-fill{height:4px;border-radius:20px}
+/* FORM */
+.form-row{margin-bottom:11px}
+.form-row label{display:block;font-size:10px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
+.form-row input,.form-row select,.form-row textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{outline:none;border-color:var(--blue);background:var(--white)}
+.form-row textarea{resize:vertical;min-height:55px}
+.form-sec{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);padding:12px 0 6px;border-top:1px solid var(--border);margin-top:12px}
+.form-sec:first-child{border-top:none;padding-top:0;margin-top:0}
+.btn-primary{padding:8px 14px;background:var(--blue);color:white;border:none;border-radius:var(--radius);font-size:12px;font-family:inherit;cursor:pointer}
+.btn-primary:hover{background:var(--blue-d)}
+.btn-primary.full{width:100%;padding:10px;font-size:13px;margin-top:4px}
+.btn-secondary{padding:7px 13px;font-size:12px;background:transparent;border:1px solid var(--border);border-radius:var(--radius);color:var(--text2);cursor:pointer;font-family:inherit}
+.btn-secondary:hover{background:var(--bg)}
+.btn-success{padding:8px 20px;font-size:13px;background:var(--green);color:white;border:none;border-radius:var(--radius);font-family:inherit;cursor:pointer}
+.btn-success:hover{background:#145c31}
+.btn-add{padding:6px 12px;font-size:11px;background:var(--blue-l);border:1px solid var(--blue);border-radius:var(--radius);color:var(--blue);cursor:pointer;font-family:inherit}
+.btn-add:hover{background:var(--blue);color:white}
+.btn-sm{padding:3px 9px;font-size:11px;border-radius:var(--radius);border:1px solid var(--border);background:transparent;cursor:pointer;font-family:inherit;color:var(--text2)}
+.btn-sm:hover{background:var(--bg)}
+.btn-sm.danger{border-color:#FCA5A5;color:var(--red)}.btn-sm.danger:hover{background:var(--red-l)}
+/* RESULT */
+.result-block{background:var(--blue-l);border:1px solid #BFCFF8;border-radius:var(--radius-lg);padding:14px;margin-top:8px}
+.rrow{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid #D4DEFA}
+.rrow:last-child{border:none;font-size:13px;padding-top:6px}
+.rrow .rl{color:var(--blue)}.rrow .rv{color:var(--blue-d);font-weight:bold}
+.rsec{margin-top:10px;padding-top:10px;border-top:1px solid #BFCFF8}
+.rsec-title{font-size:10px;letter-spacing:0.07em;text-transform:uppercase;color:var(--blue);margin-bottom:6px}
+/* WIZARD */
+.wizard-steps{display:flex;margin-bottom:18px;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.wstep{flex:1;padding:10px 12px;font-size:11px;color:var(--text3);background:var(--white);border-right:1px solid var(--border);text-align:center;cursor:pointer}
+.wstep:last-child{border-right:none}
+.wstep.active{background:var(--blue-l);color:var(--blue)}
+.wstep.done{background:var(--green-l);color:var(--green)}
+.wstep .sn{font-size:15px;display:block;margin-bottom:1px}
+.wstep .sl{font-size:10px;letter-spacing:0.05em;text-transform:uppercase}
+.step-content{display:none}.step-content.active{display:block}
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(26,25,23,0.5);display:flex;align-items:flex-start;justify-content:center;z-index:200;overflow-y:auto;padding:30px 20px}
+.modal{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;width:460px;max-width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.12)}
+.modal-lg{width:620px}
+.modal-title{font-size:14px;font-weight:normal;margin-bottom:16px;letter-spacing:-0.2px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+/* TC BANNER */
+.tc-banner{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.tc-item{display:flex;align-items:center;gap:8px}
+.tc-label{font-size:10px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text3)}
+.tc-val{font-size:18px;font-weight:normal;color:var(--text);letter-spacing:-0.3px}
+.tc-edit{font-size:11px;color:var(--blue);cursor:pointer;text-decoration:underline;margin-left:4px}
+/* STATUS PILL MAP */
+.s-pagado{background:var(--green-l);color:var(--green)}
+.s-pendiente{background:var(--amber-l);color:var(--amber)}
+.s-declinado{background:var(--red-l);color:var(--red)}
+.s-noaplica{background:var(--gray-l);color:var(--gray-d)}
+.s-proceso{background:var(--blue-l);color:var(--blue)}
+/* INFO / WARN */
+.info-box{background:var(--blue-l);border:1px solid #BFCFF8;border-radius:var(--radius);padding:10px 12px;font-size:12px;color:var(--blue);margin-bottom:12px}
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--text);color:white;padding:11px 16px;border-radius:var(--radius-lg);font-size:13px;z-index:300;opacity:0;transition:opacity 0.3s;pointer-events:none}
+.toast.show{opacity:1}
+/* ACCESS DENIED */
+.access-denied{text-align:center;padding:50px 20px;color:var(--text3)}
+.access-denied .icon{font-size:26px;margin-bottom:10px;opacity:0.4}
+/* FILTER ROW */
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.filter-row input,.filter-row select{font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-wrap">
+    <div class="login-header">
+      <div class="brand">Inkapital Asset Management</div>
+      <h1>Sistema de Comisiones</h1>
+      <div class="tagline">Gestión y cálculo de comisiones a captadores</div>
+    </div>
+    <div class="login-card">
+      <div id="login-error" class="login-error">Usuario o contraseña incorrectos</div>
+      <div class="field"><label>Usuario</label><input type="text" id="inp-user" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="field"><label>Contraseña</label><input type="password" id="inp-pass" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn-login" onclick="doLogin()">Ingresar al sistema</button>
+      <div class="demo-hint">
+        <p>Usuarios de prueba</p>
+        <div class="demo-row"><span>admin</span><span>admin123 · Administrador</span></div>
+        <div class="demo-row"><span>operador</span><span>op2024 · Operador</span></div>
+        <div class="demo-row"><span>consulta</span><span>cons2024 · Solo lectura</span></div>
+        <div class="demo-row"><span>captador</span><span>cap2024 · Captador</span></div>
+      </div>
+    </div>
+    <div class="login-footer">Acceso restringido · Solo personal autorizado</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen" class="hidden">
+  <div class="sidebar">
+    <div class="sb-brand"><div class="co">IAM</div><div class="sub">Comisiones Captadores</div></div>
+    <div class="sb-user"><div class="uname" id="sb-uname">—</div><div class="urole" id="sb-urole">—</div></div>
+    <div class="nav-sec">Principal</div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)" id="nav-dashboard"><span class="ni">▦</span> Dashboard</div>
+    <div class="nav-item" onclick="showPage('operaciones',this)" id="nav-operaciones"><span class="ni">◈</span> Operaciones</div>
+    <div class="nav-item" onclick="showPage('nueva',this)" id="nav-nueva"><span class="ni">＋</span> Nueva operación</div>
+    <div class="nav-sec">Catálogos</div>
+    <div class="nav-item" onclick="showPage('vehiculos',this)" id="nav-vehiculos"><span class="ni">◫</span> Vehículos</div>
+    <div class="nav-item" onclick="showPage('empresas',this)" id="nav-empresas"><span class="ni">⊟</span> Empresas</div>
+    <div class="nav-item" onclick="showPage('inversionistas',this)" id="nav-inversionistas"><span class="ni">⊛</span> Inversionistas</div>
+    <div class="nav-item" onclick="showPage('referidores',this)" id="nav-referidores"><span class="ni">◉</span> Referidores</div>
+    <div class="nav-sec">Finanzas</div>
+    <div class="nav-item" onclick="showPage('calculo',this)" id="nav-calculo"><span class="ni">⊞</span> Calcular</div>
+    <div class="nav-item" onclick="showPage('devengados',this)" id="nav-devengados"><span class="ni">⊡</span> Devengados</div>
+    <div class="nav-item" onclick="showPage('pagar',this)" id="nav-pagar"><span class="ni">⊕</span> Por Pagar</div>
+    <div class="nav-item" onclick="showPage('pagadas',this)" id="nav-pagadas"><span class="ni">✓</span> Pagadas</div>
+    <div class="nav-item" onclick="showPage('proyeccion',this)" id="nav-proyeccion"><span class="ni">↗</span> Proyección</div>
+    <div class="nav-sec">Sistema</div>
+    <div class="nav-item" onclick="showPage('tipocambio',this)" id="nav-tipocambio"><span class="ni">$</span> Tipo de Cambio</div>
+    <div class="nav-item" onclick="showPage('usuarios',this)" id="nav-usuarios" style="display:none"><span class="ni">⊙</span> Usuarios</div>
+    <div class="nav-bottom"><button class="btn-logout" onclick="doLogout()">Cerrar sesión</button></div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left"><h2 id="page-title">Dashboard</h2><p id="page-sub">Resumen general</p></div>
+      <div class="topbar-right" id="topbar-tc">TC: — | —</div>
+    </div>
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-label">Operaciones registradas</div><div class="kpi-value" id="kpi-total">0</div><div class="kpi-sub">en el sistema</div></div>
+          <div class="kpi"><div class="kpi-label">Comisiones generadas</div><div class="kpi-value" id="kpi-com">S/ 0</div><div class="badge bg">total</div></div>
+          <div class="kpi"><div class="kpi-label">Pendientes de pago</div><div class="kpi-value" id="kpi-pend">0</div><div class="badge bw">por liquidar</div></div>
+          <div class="kpi"><div class="kpi-label">Referidores activos</div><div class="kpi-value" id="kpi-refs">0</div><div class="badge bb">registrados</div></div>
+        </div>
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-header"><span class="panel-title">Por vehículo</span></div>
+            <div id="dash-fondos"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><span class="panel-title">Últimas operaciones</span></div>
+            <table><thead><tr><th>Inversionista</th><th>Vehículo</th><th>Monto</th><th>Status</th></tr></thead>
+            <tbody id="dash-recientes"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- OPERACIONES -->
+      <div class="page" id="page-operaciones">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Registro de operaciones</span>
+            <span id="ops-count" style="font-size:11px;color:var(--text3)"></span>
+          </div>
+          <div class="filter-row">
+            <input type="text" id="ops-search" placeholder="Buscar inversionista o código..." style="width:200px" oninput="renderOps()">
+            <select id="ops-f-veh" onchange="renderOps()" style="width:160px"><option value="">Todos los vehículos</option></select>
+            <select id="ops-f-status" onchange="renderOps()" style="width:140px">
+              <option value="">Todos los status</option>
+              <option>PAGADO</option><option>PENDIENTE</option><option>DECLINADO</option><option>NO APLICA</option><option>EN PROCESO</option>
+            </select>
+          </div>
+          <div style="overflow-x:auto">
+          <table><thead><tr><th>Código</th><th>Inversionista</th><th>Vehículo</th><th>Empresa</th><th>Mon</th><th>Monto</th><th>Tipo op.</th><th>Estado inv.</th><th>Referidor</th><th>Doc.</th><th>Comisión</th><th>Status pago</th><th></th></tr></thead>
+          <tbody id="ops-tbody"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- NUEVA OPERACIÓN -->
+      <div class="page" id="page-nueva">
+        <div class="wizard-steps">
+          <div class="wstep active" id="ws-1"><span class="sn">1</span><span class="sl">Inversión</span></div>
+          <div class="wstep" id="ws-2"><span class="sn">2</span><span class="sl">Referidores</span></div>
+          <div class="wstep" id="ws-3"><span class="sn">3</span><span class="sl">Comisiones</span></div>
+          <div class="wstep" id="ws-4"><span class="sn">4</span><span class="sl">Confirmar</span></div>
+        </div>
+        <!-- STEP 1 -->
+        <div class="step-content active" id="step-1">
+          <div class="two-col">
+            <div class="panel">
+              <div class="panel-header"><span class="panel-title">Datos de la inversión</span></div>
+              <div class="form-row"><label>Código de sistema</label><input type="text" id="n-cod" placeholder="Ej: 0100000120"></div>
+              <div class="form-row"><label>Inversionista</label><select id="n-inv"><option value="">Seleccione...</option></select></div>
+              <div class="form-row"><label>Vehículo de inversión</label><select id="n-veh" onchange="onVehChange()"><option value="">Seleccione...</option></select></div>
+              <div class="form-row"><label>Empresa que registra comisión</label><select id="n-empresa"><option value="">Seleccione vehículo primero</option></select></div>
+              <div class="form-row"><label>Tipo de operación</label>
+                <select id="n-tipo"><option value="Captación">Captación nueva</option><option value="Renovación">Renovación</option></select>
+              </div>
+              <div class="form-row"><label>Estado de la inversión</label>
+                <select id="n-estado"><option value="ACTIVO">Activo</option><option value="TERMINADO">Terminado</option><option value="RESCATE">Rescate</option><option value="CAMBIO">Cambio de fondo</option></select>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-header"><span class="panel-title">Montos, fechas y documento</span></div>
+              <div class="form-row"><label>Moneda</label>
+                <select id="n-mon" onchange="onMonChange()"><option value="PEN">PEN – Soles</option><option value="USD">USD – Dólares</option></select>
+              </div>
+              <div class="form-row"><label>Monto de inversión</label><input type="number" id="n-monto" placeholder="Ej: 100000" min="0"></div>
+              <div id="n-tc-row" class="hidden">
+                <div class="form-row"><label>Equivalente en soles (TC compra: <span id="n-tc-show">—</span>)</label>
+                  <input type="text" id="n-monto-pen" readonly style="background:var(--bg2);color:var(--text3)">
+                </div>
+              </div>
+              <div class="form-row"><label>Tasa de interés (%)</label><input type="number" id="n-tasa" placeholder="Ej: 10.5" step="0.01"></div>
+              <div class="form-row"><label>Fecha de inicio</label><input type="date" id="n-ini"></div>
+              <div class="form-row"><label>Fecha fin (inversionista)</label><input type="date" id="n-fin"></div>
+              <div class="form-row"><label>Tipo de documento</label>
+                <select id="n-tipdoc"><option value="RH">RH – Recibo por Honorarios</option><option value="FT">FT – Factura</option><option value="SD">SD – Sin documento</option></select>
+              </div>
+              <div class="form-row"><label>N° documento</label><input type="text" id="n-doc" placeholder="Ej: E001-025"></div>
+              <div class="form-row"><label>Fecha emisión documento</label><input type="date" id="n-femi"></div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:8px">
+            <button class="btn-primary" onclick="irStep(2)">Siguiente → Referidores</button>
+          </div>
+        </div>
+        <!-- STEP 2 -->
+        <div class="step-content" id="step-2">
+          <div class="two-col">
+            <div class="panel">
+              <div class="panel-header"><span class="panel-title">Esquema de captación y referidores</span></div>
+              <div class="form-row"><label>Esquema de captación</label>
+                <select id="n-esquema" onchange="onEsquemaChange()">
+                  <option value="SIN">Sin captador externo</option>
+                  <option value="CON">Con captador externo</option>
+                  <option value="CERCANO">Captador externo cercano</option>
+                  <option value="PLACEMENT">Placement Financial SAC</option>
+                  <option value="PATZL">Especial: Patzl</option>
+                  <option value="ARTURO">Especial: Arturo Ríos</option>
+                </select>
+              </div>
+              <div id="row-ext" class="hidden">
+                <div class="form-row"><label>Referidor externo</label><select id="n-ref-ext"><option value="">Seleccione...</option></select></div>
+              </div>
+              <div class="form-row"><label>Referidor interno A</label><select id="n-ref-a"><option value="">Seleccione...</option></select></div>
+              <div class="form-row"><label>Referidor interno B (opcional)</label><select id="n-ref-b"><option value="">— Sin referidor interno B —</option></select></div>
+              <div class="form-row"><label>Status de pago</label>
+                <select id="n-status">
+                  <option value="PENDIENTE">Pendiente</option>
+                  <option value="EN PROCESO">En proceso</option>
+                  <option value="PAGADO">Pagado</option>
+                  <option value="DECLINADO">Declinado (por gerencia)</option>
+                  <option value="NO APLICA">No aplica</option>
+                </select>
+              </div>
+              <div class="form-row"><label>Observaciones</label><textarea id="n-obs" placeholder="Notas adicionales, instrucciones de gerencia..."></textarea></div>
+            </div>
+            <div class="panel">
+              <div class="panel-header"><span class="panel-title">Resumen del esquema</span></div>
+              <div id="esquema-resumen"><div style="font-size:12px;color:var(--text3);font-style:italic">Seleccione esquema para ver detalle</div></div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <button class="btn-secondary" onclick="irStep(1)">← Volver</button>
+            <button class="btn-primary" onclick="irStep(3)">Siguiente → Ver comisiones</button>
+          </div>
+        </div>
+        <!-- STEP 3 -->
+        <div class="step-content" id="step-3">
+          <div class="panel"><div class="panel-header"><span class="panel-title">Cálculo de comisiones generadas</span></div><div id="step3-res"></div></div>
+          <div style="display:flex;justify-content:space-between">
+            <button class="btn-secondary" onclick="irStep(2)">← Volver</button>
+            <button class="btn-primary" onclick="irStep(4)">Siguiente → Confirmar</button>
+          </div>
+        </div>
+        <!-- STEP 4 -->
+        <div class="step-content" id="step-4">
+          <div class="panel"><div class="panel-header"><span class="panel-title">Resumen — revise antes de registrar</span></div><div id="step4-res"></div></div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px">
+            <button class="btn-secondary" onclick="irStep(3)">← Volver</button>
+            <button class="btn-success" onclick="confirmarRegistro()">✓ Registrar operación</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VEHÍCULOS -->
+      <div class="page" id="page-vehiculos">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Vehículos de inversión</span><button class="btn-add" onclick="abrirModal('veh')">+ Nuevo vehículo</button></div>
+          <table><thead><tr><th>Nombre</th><th>Moneda principal</th><th>Empresas asociadas</th><th>Operaciones</th><th></th></tr></thead>
+          <tbody id="veh-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- EMPRESAS -->
+      <div class="page" id="page-empresas">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Empresas del grupo</span><button class="btn-add" onclick="abrirModal('emp')">+ Nueva empresa</button></div>
+          <table><thead><tr><th>Nombre</th><th>RUC</th><th>Vehículo asociado</th><th>Operaciones</th><th></th></tr></thead>
+          <tbody id="emp-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- INVERSIONISTAS -->
+      <div class="page" id="page-inversionistas">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Inversionistas</span><button class="btn-add" onclick="abrirModal('inv')">+ Nuevo inversionista</button></div>
+          <div class="filter-row"><input type="text" id="inv-search" placeholder="Buscar nombre o documento..." style="width:220px" oninput="renderInversionistas()"></div>
+          <table><thead><tr><th>Nombre</th><th>Tipo</th><th>Doc. identidad</th><th>Correo</th><th>Inversiones</th><th></th></tr></thead>
+          <tbody id="inv-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- REFERIDORES -->
+      <div class="page" id="page-referidores">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Referidores / Captadores</span><button class="btn-add" onclick="abrirModal('ref')">+ Nuevo referidor</button></div>
+          <table><thead><tr><th>Nombre</th><th>Tipo</th><th>Empresa / RUC</th><th>Operaciones</th><th></th></tr></thead>
+          <tbody id="ref-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- TIPO DE CAMBIO -->
+      <div class="page" id="page-tipocambio">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Tipo de cambio (USD / PEN)</span><button class="btn-add" onclick="abrirModal('tc')">+ Registrar TC del día</button></div>
+          <div class="three-col">
+            <div class="kpi"><div class="kpi-label">TC Compra vigente</div><div class="kpi-value" id="tc-compra-show">—</div><div class="kpi-sub">Soles por USD</div></div>
+            <div class="kpi"><div class="kpi-label">TC Venta vigente</div><div class="kpi-value" id="tc-venta-show">—</div><div class="kpi-sub">Soles por USD</div></div>
+            <div class="kpi"><div class="kpi-label">Última actualización</div><div class="kpi-value" id="tc-fecha-show" style="font-size:16px">—</div><div class="kpi-sub">fecha del registro</div></div>
+          </div>
+          <table><thead><tr><th>Fecha</th><th>TC Compra</th><th>TC Venta</th><th>Registrado por</th><th>Nota</th></tr></thead>
+          <tbody id="tc-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- CALCULAR -->
+      <div class="page" id="page-calculo">
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-header"><span class="panel-title">Parámetros</span></div>
+            <div class="form-row"><label>Vehículo (IAM vs Fondo)</label><select id="c-fondo" onchange="calcular()"><option value="IAM">IAM (gestora)</option><option value="FONDO">Fondo</option></select></div>
+            <div class="form-row"><label>Tipo</label><select id="c-tipo" onchange="calcular()"><option value="CAP">Captación nueva</option><option value="REN">Renovación</option></select></div>
+            <div class="form-row"><label>Esquema</label><select id="c-esquema" onchange="calcular()">
+              <option value="SIN">Sin captador externo</option><option value="CON">Con captador externo</option>
+              <option value="CERCANO">Externo cercano</option><option value="PLACEMENT">Placement Financial</option>
+              <option value="PATZL">Especial: Patzl</option><option value="ARTURO">Especial: Arturo Ríos</option>
+            </select></div>
+            <div class="form-row"><label>Moneda</label><select id="c-mon" onchange="calcular()"><option>USD</option><option>PEN</option></select></div>
+            <div class="form-row"><label>Monto</label><input type="number" id="c-monto" value="100000" oninput="calcular()"></div>
+            <div class="form-row"><label>Fecha inicio</label><input type="date" id="c-ini" oninput="calcular()"></div>
+            <div class="form-row"><label>Fecha fin</label><input type="date" id="c-fin" oninput="calcular()"></div>
+            <button class="btn-primary full" onclick="calcular()">Calcular</button>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><span class="panel-title">Resultado</span></div>
+            <div id="calc-res"><div style="font-size:12px;color:var(--text3);padding:30px 0;text-align:center;font-style:italic">Complete los parámetros</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEVENGADOS -->
+      <div class="page" id="page-devengados">
+        <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="kpi"><div class="kpi-label">Total a devengar</div><div class="kpi-value" id="dev-total">S/ 0</div></div>
+          <div class="kpi"><div class="kpi-label">Devengado a hoy</div><div class="kpi-value" id="dev-acum">S/ 0</div></div>
+          <div class="kpi"><div class="kpi-label">Por devengar</div><div class="kpi-value" id="dev-pend">S/ 0</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Detalle por operación</span></div>
+          <table><thead><tr><th>Código</th><th>Inversionista</th><th>Referidor A</th><th>Com. total</th><th>Días tot.</th><th>Días trans.</th><th>Devengado</th><th>Por devengar</th><th>Avance</th></tr></thead>
+          <tbody id="dev-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- POR PAGAR -->
+      <div class="page" id="page-pagar">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Comisiones pendientes de pago</span></div>
+          <table><thead><tr><th>Código</th><th>Referidor</th><th>Empresa</th><th>Documento</th><th>Com. base</th><th>Status</th><th>Acciones</th></tr></thead>
+          <tbody id="pagar-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- PAGADAS -->
+      <div class="page" id="page-pagadas">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Historial de comisiones pagadas</span></div>
+          <table><thead><tr><th>Código</th><th>Inversionista</th><th>Referidor</th><th>Tipo doc.</th><th>N° Doc.</th><th>Moneda</th><th>Com. base</th><th>Total pagado</th></tr></thead>
+          <tbody id="pagadas-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- PROYECCIÓN -->
+      <div class="page" id="page-proyeccion">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Proyección de comisiones futuras</span>
+            <select id="proy-esc" onchange="renderProy()" style="font-size:12px;padding:5px 9px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);font-family:inherit">
+              <option value="1">Escenario base</option><option value="1.2">Optimista (+20%)</option><option value="0.8">Conservador (-20%)</option>
+            </select>
+          </div>
+          <table><thead><tr><th>Periodo</th><th>Captaciones est.</th><th>Renovaciones est.</th><th>Com. estimadas</th><th>Asume IAM</th><th>Asume Fondos</th></tr></thead>
+          <tbody id="proy-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- USUARIOS -->
+      <div class="page" id="page-usuarios">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Gestión de usuarios</span><button class="btn-add" onclick="abrirModal('usr')">+ Nuevo usuario</button></div>
+          <div id="user-grid"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODALES -->
+<div id="modal-veh" class="modal-bg hidden"><div class="modal">
+  <div class="modal-title" id="mveh-titulo">Nuevo vehículo</div>
+  <div class="form-row"><label>Nombre del vehículo</label><input type="text" id="mveh-nombre" placeholder="Ej: 4 IAM Fondo Renta Fija PEN"></div>
+  <div class="form-row"><label>Moneda principal</label><select id="mveh-mon"><option value="PEN">PEN</option><option value="USD">USD</option><option value="PEN/USD">PEN / USD</option></select></div>
+  <div class="form-row"><label>Nota / descripción</label><input type="text" id="mveh-nota" placeholder="Opcional"></div>
+  <div class="modal-actions"><button class="btn-secondary" onclick="cerrarModales()">Cancelar</button><button class="btn-primary" onclick="guardar('veh')">Guardar</button></div>
+</div></div>
+
+<div id="modal-emp" class="modal-bg hidden"><div class="modal">
+  <div class="modal-title" id="memp-titulo">Nueva empresa</div>
+  <div class="form-row"><label>Nombre de la empresa</label><input type="text" id="memp-nombre" placeholder="Ej: 4 IAM RENTA FIJA"></div>
+  <div class="form-row"><label>RUC</label><input type="text" id="memp-ruc" placeholder="Ej: 20123456789"></div>
+  <div class="form-row"><label>Vehículo asociado</label><select id="memp-veh"><option value="">— General / todos —</option></select></div>
+  <div class="modal-actions"><button class="btn-secondary" onclick="cerrarModales()">Cancelar</button><button class="btn-primary" onclick="guardar('emp')">Guardar</button></div>
+</div></div>
+
+<div id="modal-inv" class="modal-bg hidden"><div class="modal">
+  <div class="modal-title" id="minv-titulo">Nuevo inversionista</div>
+  <div class="form-row"><label>Nombre completo</label><input type="text" id="minv-nombre" placeholder="Apellidos y nombres o razón social"></div>
+  <div class="form-row"><label>Tipo</label><select id="minv-tipo"><option value="Persona Natural">Persona Natural</option><option value="Persona Jurídica">Persona Jurídica</option></select></div>
+  <div class="form-row"><label>DNI / RUC</label><input type="text" id="minv-doc"></div>
+  <div class="form-row"><label>Correo electrónico</label><input type="email" id="minv-email"></div>
+  <div class="form-row"><label>Teléfono</label><input type="text" id="minv-tel"></div>
+  <div class="modal-actions"><button class="btn-secondary" onclick="cerrarModales()">Cancelar</button><button class="btn-primary" onclick="guardar('inv')">Guardar</button></div>
+</div></div>
+
+<div id="modal-ref" class="modal-bg hidden"><div class="modal">
+  <div class="modal-title" id="mref-titulo">Nuevo referidor</div>
+  <div class="form-row"><label>Nombre completo</label><input type="text" id="mref-nombre"></div>
+  <div class="form-row"><label>Tipo</label><select id="mref-tipo"><option value="Externo">Externo</option><option value="Interno A">Interno A</option><option value="Interno B">Interno B</option><option value="Empresa">Empresa captadora</option></select></div>
+  <div class="form-row"><label>Empresa / Razón social</label><input type="text" id="mref-empresa" placeholder="Opcional"></div>
+  <div class="form-row"><label>RUC / DNI</label><input type="text" id="mref-ruc" placeholder="Opcional"></div>
+  <div class="modal-actions"><button class="btn-secondary" onclick="cerrarModales()">Cancelar</button><button class="btn-primary" onclick="guardar('ref')">Guardar</button></div>
+</div></div>
+
+<div id="modal-tc" class="modal-bg hidden"><div class="modal">
+  <div class="modal-title">Registrar tipo de cambio del día</div>
+  <div class="form-row"><label>Fecha</label><input type="date" id="mtc-fecha"></div>
+  <div class="form-row"><label>TC Compra (S/ por USD)</label><input type="number" id="mtc-compra" step="0.001" placeholder="Ej: 3.720"></div>
+  <div class="form-row"><label>TC Venta (S/ por USD)</label><input type="number" id="mtc-venta" step="0.001" placeholder="Ej: 3.740"></div>
+  <div class="form-row"><label>Nota</label><input type="text" id="mtc-nota" placeholder="Ej: SBS, BCRP, tipo de operación..."></div>
+  <div class="modal-actions"><button class="btn-secondary" onclick="cerrarModales()">Cancelar</button><button class="btn-primary" onclick="guardar('tc')">Guardar</button></div>
+</div></div>
+
+<div id="modal-usr" class="modal-bg hidden"><div class="modal">
+  <div class="modal-title" id="musr-titulo">Nuevo usuario</div>
+  <div class="form-row"><label>Nombre completo</label><input type="text" id="musr-nombre"></div>
+  <div class="form-row"><label>Usuario (login)</label><input type="text" id="musr-user"></div>
+  <div class="form-row"><label>Contraseña</label><input type="password" id="musr-pass" placeholder="Mínimo 6 caracteres"></div>
+  <div class="form-row"><label>Perfil</label><select id="musr-rol"><option value="admin">Administrador</option><option value="operador">Operador</option><option value="consulta">Consulta</option><option value="captador">Captador</option></select></div>
+  <div class="modal-actions"><button class="btn-secondary" onclick="cerrarModales()">Cancelar</button><button class="btn-primary" onclick="guardar('usr')">Guardar</button></div>
+</div></div>
+
+<div id="modal-status" class="modal-bg hidden"><div class="modal">
+  <div class="modal-title">Cambiar status de pago</div>
+  <div class="info-box" id="modal-status-info"></div>
+  <div class="form-row"><label>Nuevo status</label>
+    <select id="ms-status">
+      <option value="PENDIENTE">Pendiente</option>
+      <option value="EN PROCESO">En proceso</option>
+      <option value="PAGADO">Pagado</option>
+      <option value="DECLINADO">Declinado (por gerencia)</option>
+      <option value="NO APLICA">No aplica</option>
+    </select>
+  </div>
+  <div class="form-row"><label>Motivo / Nota</label><textarea id="ms-nota" placeholder="Instrucción de gerencia u observación..."></textarea></div>
+  <div class="modal-actions"><button class="btn-secondary" onclick="cerrarModales()">Cancelar</button><button class="btn-primary" onclick="guardarStatus()">Actualizar status</button></div>
+</div></div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// DATOS BASE
+// ═══════════════════════════════════════════════════
+const POL={
+  CAP:{IAM:{SIN:{tot:0.06,A:0.045,B:0.015,ext:0,fon:0.03},CON:{tot:0.06,A:0.02625,B:0.00875,ext:0.025,fon:0.025},CERCANO:{tot:0.06,A:0.0225,B:0.0075,ext:0.03,fon:0.03},PLACEMENT:{tot:0.06,A:0.015,B:0.005,ext:0.03,fon:0.03},PATZL:{tot:0.06,A:0.015,B:0.005,ext:0.025,fon:0.025},ARTURO:{tot:0.06,A:0.015,B:0.005,ext:0.03,fon:0.03}},FONDO:{SIN:{tot:0.03,A:0.015,B:0.015,ext:0,fon:0.03},CON:{tot:0.035,A:0.02625,B:0.00875,ext:0,fon:0.025},CERCANO:{tot:0.03,A:0.0225,B:0.0075,ext:0,fon:0.03},PLACEMENT:{tot:0.03,A:0.015,B:0.015,ext:0.03,fon:0.03},PATZL:{tot:0.03,A:0.015,B:0.015,ext:0.025,fon:0.025},ARTURO:{tot:0.03,A:0.015,B:0.015,ext:0.03,fon:0.03}}},
+  REN:{IAM:{SIN:{tot:0.03,A:0.0225,B:0.0075,ext:0,fon:0.015},CON:{tot:0.03,A:0.013125,B:0.004375,ext:0.0125,fon:0.0125},CERCANO:{tot:0.04,A:0.0121,B:0.0079,ext:0.02,fon:0.02},PLACEMENT:{tot:0.04315,A:0.01125,B:0.0069,ext:0.025,fon:0.025},PATZL:{tot:0.03,A:0.01125,B:0.00388,ext:0.0125,fon:0.0125},ARTURO:{tot:0.03,A:0.0112,B:0.0038,ext:0.015,fon:0.015}},FONDO:{SIN:{tot:0.015,A:0.0075,B:0.0075,ext:0,fon:0.015},CON:{tot:0.0175,A:0.013125,B:0.004375,ext:0,fon:0.0125},CERCANO:{tot:0.02,A:0.0121,B:0.0079,ext:0,fon:0.02},PLACEMENT:{tot:0.018,A:0.01125,B:0.0069,ext:0,fon:0.025},PATZL:{tot:0.0175,A:0.01125,B:0.00388,ext:0,fon:0.0125},ARTURO:{tot:0.015,A:0.0112,B:0.0038,ext:0,fon:0.015}}},
+};
+const ESQ={SIN:'Sin captador externo',CON:'Con captador externo',CERCANO:'Externo cercano',PLACEMENT:'Placement Financial',PATZL:'Especial Patzl',ARTURO:'Especial Arturo Ríos'};
+const ROLES={admin:'Administrador',operador:'Operador',consulta:'Consulta',captador:'Captador'};
+const STATUS_CLASS={PAGADO:'pg',PENDIENTE:'pw','EN PROCESO':'pb',DECLINADO:'pr','NO APLICA':'pgr'};
+
+let vehiculos=[
+  {id:1,nombre:'1 IAM Inversiones',mon:'PEN/USD',nota:'',empresas:[1]},
+  {id:2,nombre:'2 IAM Medicash PEN',mon:'PEN',nota:'',empresas:[1,2]},
+  {id:3,nombre:'3 IAM Fondo Facturas USD',mon:'USD',nota:'',empresas:[1,3]},
+];
+let empresas=[
+  {id:1,nombre:'1 INKAPITAL',ruc:'20123456789',veh:null},
+  {id:2,nombre:'2 IAM MEDICASH',ruc:'20234567890',veh:2},
+  {id:3,nombre:'3 IAM FONDO DÓLARES',ruc:'20345678901',veh:3},
+];
+let inversionistas=[
+  {id:1,nombre:'Torres Oliva Lucy Enriqueta',tipo:'Persona Natural',doc:'12345678',email:'',tel:''},
+  {id:2,nombre:'Gubbins Doberti Jorge Enrique',tipo:'Persona Natural',doc:'23456789',email:'',tel:''},
+  {id:3,nombre:'San Martin Mauricio Gustavo',tipo:'Persona Natural',doc:'34567890',email:'',tel:''},
+  {id:4,nombre:'Rios Grimaldi Arturo Alfonso',tipo:'Persona Natural',doc:'45678901',email:'',tel:''},
+  {id:5,nombre:'Castro Echecopar Luis Martín',tipo:'Persona Natural',doc:'56789012',email:'',tel:''},
+];
+let referidores=[
+  {id:1,nombre:'Placement Financial SAC',tipo:'Empresa',empresa:'Placement Financial SAC',ruc:'20123456789'},
+  {id:2,nombre:'Rios Tipiani Arturo Francisco',tipo:'Externo',empresa:'',ruc:''},
+  {id:3,nombre:'Delfino Villa Garcia Gabriela',tipo:'Interno A',empresa:'',ruc:''},
+  {id:4,nombre:'Campos Macedo Vania',tipo:'Interno A',empresa:'',ruc:''},
+  {id:5,nombre:'Castro Echecopar Luis Martin',tipo:'Interno B',empresa:'',ruc:''},
+  {id:6,nombre:'Armас Escudero Juan',tipo:'Interno B',empresa:'',ruc:''},
+  {id:7,nombre:'De Albertis Revilla Sergio',tipo:'Externo',empresa:'',ruc:''},
+  {id:8,nombre:'Patzl Trelles Michael',tipo:'Externo',empresa:'',ruc:''},
+];
+let tiposCambio=[
+  {id:1,fecha:'2026-04-29',compra:3.720,venta:3.740,nota:'BCRP',user:'admin'},
+];
+let operaciones=[];
+let usuarios=[
+  {id:1,nombre:'Franco Canaza',user:'admin',pass:'admin123',rol:'admin'},
+  {id:2,nombre:'María Operaciones',user:'operador',pass:'op2024',rol:'operador'},
+  {id:3,nombre:'Juan Consultor',user:'consulta',pass:'cons2024',rol:'consulta'},
+  {id:4,nombre:'Arturo Ríos',user:'captador',pass:'cap2024',rol:'captador'},
+];
+let currentUser=null,editIds={},statusOpId=null;
+
+// ═══════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════
+function doLogin(){
+  const u=document.getElementById('inp-user').value.trim();
+  const p=document.getElementById('inp-pass').value;
+  const f=usuarios.find(x=>x.user===u&&x.pass===p);
+  if(!f){document.getElementById('login-error').style.display='block';document.getElementById('inp-pass').value='';return;}
+  document.getElementById('login-error').style.display='none';
+  currentUser=f;
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app-screen').classList.remove('hidden');
+  document.getElementById('sb-uname').textContent=f.nombre;
+  document.getElementById('sb-urole').textContent=ROLES[f.rol];
+  document.getElementById('nav-usuarios').style.display=f.rol==='admin'?'flex':'none';
+  actualizarTC();
+  initCalc();renderProy();renderDashboard();
+  populateSelects();
+}
+function doLogout(){
+  currentUser=null;
+  document.getElementById('app-screen').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('inp-user').value='';document.getElementById('inp-pass').value='';
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-dashboard').classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('nav-dashboard').classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════
+// NAVEGACIÓN
+// ═══════════════════════════════════════════════════
+const PAGES={dashboard:{t:'Dashboard',s:'Resumen general'},operaciones:{t:'Operaciones',s:'Registro de operaciones e inversiones'},nueva:{t:'Nueva operación',s:'Registrar inversión y comisiones'},vehiculos:{t:'Vehículos',s:'Catálogo de vehículos de inversión'},empresas:{t:'Empresas',s:'Catálogo de empresas del grupo'},inversionistas:{t:'Inversionistas',s:'Catálogo de inversionistas'},referidores:{t:'Referidores',s:'Catálogo de referidores y captadores'},tipocambio:{t:'Tipo de Cambio',s:'Registro diario de TC compra y venta'},calculo:{t:'Calcular',s:'Motor de cálculo según política IAM'},devengados:{t:'Devengados',s:'Comisiones devengadas por operación'},pagar:{t:'Por Pagar',s:'Comisiones pendientes de liquidación'},pagadas:{t:'Pagadas',s:'Historial de comisiones pagadas'},proyeccion:{t:'Proyección',s:'Estimación de comisiones futuras'},usuarios:{t:'Usuarios',s:'Gestión de accesos al sistema'}};
+const RESTRINGIDO_OP=['nueva'];
+const RESTRINGIDO_ADMIN=['usuarios'];
+function showPage(id,el){
+  if(RESTRINGIDO_OP.includes(id)&&!['admin','operador'].includes(currentUser?.rol)){toast('Sin permiso para este módulo');return;}
+  if(RESTRINGIDO_ADMIN.includes(id)&&currentUser?.rol!=='admin'){toast('Solo administradores');return;}
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  const pg=PAGES[id];
+  document.getElementById('page-title').textContent=pg.t;
+  document.getElementById('page-sub').textContent=pg.s;
+  if(id==='operaciones'){initFiltroVeh();renderOps();}
+  if(id==='dashboard')renderDashboard();
+  if(id==='vehiculos')renderVehiculos();
+  if(id==='empresas'){poblarSelectVehEmp();renderEmpresas();}
+  if(id==='inversionistas')renderInversionistas();
+  if(id==='referidores')renderReferidores();
+  if(id==='tipocambio')renderTC();
+  if(id==='devengados')renderDevengados();
+  if(id==='pagar')renderPagar();
+  if(id==='pagadas')renderPagadas();
+  if(id==='usuarios')renderUsuarios();
+  if(id==='nueva'){resetWizard();populateSelects();}
+}
+
+// ═══════════════════════════════════════════════════
+// TC HELPERS
+// ═══════════════════════════════════════════════════
+function tcActual(){return tiposCambio.length>0?tiposCambio[tiposCambio.length-1]:{compra:3.72,venta:3.74};}
+function actualizarTC(){
+  const tc=tcActual();
+  document.getElementById('topbar-tc').textContent=`TC C: ${tc.compra.toFixed(3)} | V: ${tc.venta.toFixed(3)}`;
+}
+
+// ═══════════════════════════════════════════════════
+// SELECTS HELPERS
+// ═══════════════════════════════════════════════════
+function populateSelects(){
+  // Vehículos en nueva operación
+  const sv=document.getElementById('n-veh');
+  sv.innerHTML='<option value="">Seleccione...</option>';
+  vehiculos.forEach(v=>sv.innerHTML+=`<option value="${v.id}">${v.nombre}</option>`);
+  // Inversionistas
+  const si=document.getElementById('n-inv');
+  si.innerHTML='<option value="">Seleccione...</option>';
+  inversionistas.forEach(i=>si.innerHTML+=`<option value="${i.id}">${i.nombre}</option>`);
+  // Referidores
+  ['n-ref-ext','n-ref-a','n-ref-b'].forEach(id=>{
+    const s=document.getElementById(id);
+    const opc=id==='n-ref-b';
+    s.innerHTML=opc?'<option value="">— Sin referidor B —</option>':'<option value="">Seleccione...</option>';
+    referidores.forEach(r=>s.innerHTML+=`<option value="${r.id}">${r.nombre} (${r.tipo})</option>`);
+  });
+}
+function onVehChange(){
+  const vid=parseInt(document.getElementById('n-veh').value);
+  const v=vehiculos.find(x=>x.id===vid);
+  const sel=document.getElementById('n-empresa');
+  if(!v){sel.innerHTML='<option value="">Seleccione vehículo primero</option>';return;}
+  const emps=empresas.filter(e=>v.empresas.includes(e.id));
+  sel.innerHTML=emps.map(e=>`<option value="${e.id}">${e.nombre}</option>`).join('');
+}
+function onMonChange(){
+  const mon=document.getElementById('n-mon').value;
+  document.getElementById('n-tc-row').classList.toggle('hidden',mon!=='USD');
+  if(mon==='USD'){
+    const tc=tcActual();
+    document.getElementById('n-tc-show').textContent=tc.compra.toFixed(3);
+    calcMontoEquiv();
+  }
+}
+function calcMontoEquiv(){
+  const m=parseFloat(document.getElementById('n-monto').value)||0;
+  const tc=tcActual();
+  document.getElementById('n-monto-pen').value='S/ '+(m*tc.compra).toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function onEsquemaChange(){
+  const e=document.getElementById('n-esquema').value;
+  const conExt=['CON','CERCANO','PLACEMENT','PATZL','ARTURO'];
+  document.getElementById('row-ext').classList.toggle('hidden',!conExt.includes(e));
+  const vid=document.getElementById('n-veh').value;
+  const vTipo=vid&&vehiculos.find(x=>x.id==vid)?.nombre?.includes('IAM Inversiones')===false&&vid?'FONDO':'IAM';
+  const tipo=document.getElementById('n-tipo').value==='Captación'?'CAP':'REN';
+  const p=POL[tipo]?.[vTipo]?.[e];
+  const m=parseFloat(document.getElementById('n-monto').value)||100000;
+  const mon=document.getElementById('n-mon').value;
+  const s=mon==='USD'?'$':'S/';
+  if(!p){document.getElementById('esquema-resumen').innerHTML='<div style="font-size:12px;color:var(--text3);font-style:italic">Configure el vehículo primero</div>';return;}
+  document.getElementById('esquema-resumen').innerHTML=`
+    <div class="info-box">Esquema: <strong>${ESQ[e]}</strong></div>
+    <table style="font-size:12px;width:100%"><thead><tr><th style="padding:4px 6px;text-align:left;font-size:10px;color:var(--text3)">Destinatario</th><th style="padding:4px 6px;text-align:left;font-size:10px;color:var(--text3)">%</th><th style="padding:4px 6px;text-align:left;font-size:10px;color:var(--text3)">Monto est.</th></tr></thead><tbody>
+      <tr><td style="padding:4px 6px">Comisión total</td><td style="padding:4px 6px">${(p.tot*100).toFixed(2)}%</td><td style="padding:4px 6px">${s} ${(m*p.tot).toFixed(2)}</td></tr>
+      ${conExt.includes(e)?`<tr><td style="padding:4px 6px">Referidor externo</td><td style="padding:4px 6px">${(p.ext*100).toFixed(2)}%</td><td style="padding:4px 6px">${s} ${(m*p.ext).toFixed(2)}</td></tr>`:''}
+      <tr><td style="padding:4px 6px">Referidor interno A</td><td style="padding:4px 6px">${(p.A*100).toFixed(2)}%</td><td style="padding:4px 6px">${s} ${(m*p.A).toFixed(2)}</td></tr>
+      <tr><td style="padding:4px 6px">Referidor interno B</td><td style="padding:4px 6px">${(p.B*100).toFixed(2)}%</td><td style="padding:4px 6px">${s} ${(m*p.B).toFixed(2)}</td></tr>
+      <tr style="border-top:1px solid var(--border)"><td style="padding:6px 6px 2px">Asume IAM</td><td></td><td style="padding:6px 6px 2px">${s} ${(m*(p.tot-p.fon)).toFixed(2)}</td></tr>
+      <tr><td style="padding:2px 6px">Asume Fondo</td><td></td><td style="padding:2px 6px">${s} ${(m*p.fon).toFixed(2)}</td></tr>
+    </tbody></table>`;
+}
+function getNombre(lista,id){if(!id)return '—';const x=lista.find(i=>i.id==id);return x?x.nombre:'—';}
+
+// ═══════════════════════════════════════════════════
+// WIZARD
+// ═══════════════════════════════════════════════════
+let currentStep=1;
+function resetWizard(){
+  irStep(1,true);
+  const hoy=new Date().toISOString().split('T')[0];
+  const ay=new Date();ay.setFullYear(ay.getFullYear()+1);
+  ['n-cod','n-obs','n-doc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('n-ini').value=hoy;
+  document.getElementById('n-fin').value=ay.toISOString().split('T')[0];
+  document.getElementById('n-femi').value=hoy;
+  document.getElementById('n-status').value='PENDIENTE';
+  document.getElementById('n-tipo').value='Captación';
+  document.getElementById('n-estado').value='ACTIVO';
+  document.getElementById('n-mon').value='PEN';
+  document.getElementById('n-monto').value='';
+  document.getElementById('n-tasa').value='';
+  document.getElementById('n-esquema').value='SIN';
+  document.getElementById('n-tc-row').classList.add('hidden');
+  document.getElementById('row-ext').classList.add('hidden');
+}
+function irStep(n,reset=false){
+  if(!reset){
+    if(n>1&&!valStep1())return;
+    if(n>2&&!valStep2())return;
+    if(n>=3)calcStep3();
+    if(n>=4)buildStep4();
+  }
+  currentStep=n;
+  for(let i=1;i<=4;i++){
+    document.getElementById('ws-'+i).classList.remove('active','done');
+    document.getElementById('step-'+i).classList.remove('active');
+    if(i<n)document.getElementById('ws-'+i).classList.add('done');
+    if(i===n){document.getElementById('ws-'+i).classList.add('active');document.getElementById('step-'+i).classList.add('active');}
+  }
+}
+function valStep1(){
+  if(!document.getElementById('n-inv').value){toast('Seleccione el inversionista');return false;}
+  if(!document.getElementById('n-veh').value){toast('Seleccione el vehículo');return false;}
+  if(!document.getElementById('n-empresa').value){toast('Seleccione la empresa');return false;}
+  if(!document.getElementById('n-monto').value||parseFloat(document.getElementById('n-monto').value)<=0){toast('Ingrese un monto válido');return false;}
+  return true;
+}
+function valStep2(){
+  const e=document.getElementById('n-esquema').value;
+  const conExt=['CON','CERCANO','PLACEMENT','PATZL','ARTURO'];
+  if(conExt.includes(e)&&!document.getElementById('n-ref-ext').value){toast('Seleccione el referidor externo');return false;}
+  if(!document.getElementById('n-ref-a').value){toast('Seleccione el referidor interno A');return false;}
+  return true;
+}
+function getPolActual(){
+  const vid=parseInt(document.getElementById('n-veh').value);
+  const v=vehiculos.find(x=>x.id===vid);
+  const vTipo=v&&!v.nombre.includes('IAM Inversiones')?'FONDO':'IAM';
+  const tipo=document.getElementById('n-tipo').value==='Captación'?'CAP':'REN';
+  const e=document.getElementById('n-esquema').value;
+  return POL[tipo]?.[vTipo]?.[e];
+}
+function calcStep3(){
+  const m=parseFloat(document.getElementById('n-monto').value)||0;
+  const mon=document.getElementById('n-mon').value;
+  const s=mon==='USD'?'$':'S/';
+  const e=document.getElementById('n-esquema').value;
+  const p=getPolActual();
+  const ini=document.getElementById('n-ini').value,fin=document.getElementById('n-fin').value;
+  let dias=0;if(ini&&fin)dias=Math.max(0,Math.round((new Date(fin)-new Date(ini))/86400000));
+  const conExt=['CON','CERCANO','PLACEMENT','PATZL','ARTURO'];
+  const refA=getNombre(referidores,document.getElementById('n-ref-a').value);
+  const refB=getNombre(referidores,document.getElementById('n-ref-b').value);
+  const refExt=conExt.includes(e)?getNombre(referidores,document.getElementById('n-ref-ext').value):'—';
+  if(!p){document.getElementById('step3-res').innerHTML='<div style="color:var(--text3);font-style:italic;padding:20px;text-align:center">Configure vehículo y esquema correctamente</div>';return;}
+  document.getElementById('step3-res').innerHTML=`<div class="result-block">
+    <div class="rrow"><span class="rl">Comisión total generada</span><span class="rv">${s} ${(m*p.tot).toFixed(2)} (${(p.tot*100).toFixed(2)}%)</span></div>
+    ${conExt.includes(e)?`<div class="rrow"><span class="rl">Referidor externo · ${refExt}</span><span class="rv">${s} ${(m*p.ext).toFixed(2)} (${(p.ext*100).toFixed(2)}%)</span></div>`:''}
+    <div class="rrow"><span class="rl">Referidor interno A · ${refA}</span><span class="rv">${s} ${(m*p.A).toFixed(2)} (${(p.A*100).toFixed(2)}%)</span></div>
+    <div class="rrow"><span class="rl">Referidor interno B · ${refB}</span><span class="rv">${s} ${(m*p.B).toFixed(2)} (${(p.B*100).toFixed(2)}%)</span></div>
+    <div class="rsec"><div class="rsec-title">Distribución institucional</div>
+      <div class="rrow"><span class="rl">Asume IAM</span><span class="rv">${s} ${(m*(p.tot-p.fon)).toFixed(2)}</span></div>
+      <div class="rrow"><span class="rl">Asume Fondo</span><span class="rv">${s} ${(m*p.fon).toFixed(2)}</span></div>
+    </div>
+    ${dias>0?`<div style="margin-top:10px;font-size:12px;color:var(--text2)">Devengado diario: <strong>${s} ${(m*p.tot/dias).toFixed(4)}</strong> · plazo ${dias} días</div>`:''}
+  </div>`;
+}
+function buildStep4(){
+  const vid=parseInt(document.getElementById('n-veh').value);
+  const v=vehiculos.find(x=>x.id===vid);
+  const empId=parseInt(document.getElementById('n-empresa').value);
+  const emp=empresas.find(x=>x.id===empId);
+  const invId=parseInt(document.getElementById('n-inv').value);
+  const inv=inversionistas.find(x=>x.id===invId);
+  const mon=document.getElementById('n-mon').value,monto=parseFloat(document.getElementById('n-monto').value)||0;
+  const e=document.getElementById('n-esquema').value;
+  const refA=getNombre(referidores,document.getElementById('n-ref-a').value);
+  const refB=getNombre(referidores,document.getElementById('n-ref-b').value);
+  document.getElementById('step4-res').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;font-size:12px">
+    <div><div style="font-size:10px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Inversión</div>
+      <table><tbody>
+        <tr><td style="color:var(--text3);padding:3px 0;width:130px">Inversionista</td><td style="padding:3px 0"><strong>${inv?inv.nombre:'—'}</strong></td></tr>
+        <tr><td style="color:var(--text3);padding:3px 0">Vehículo</td><td style="padding:3px 0">${v?v.nombre:'—'}</td></tr>
+        <tr><td style="color:var(--text3);padding:3px 0">Empresa</td><td style="padding:3px 0">${emp?emp.nombre:'—'}</td></tr>
+        <tr><td style="color:var(--text3);padding:3px 0">Tipo</td><td style="padding:3px 0">${document.getElementById('n-tipo').value}</td></tr>
+        <tr><td style="color:var(--text3);padding:3px 0">Moneda</td><td style="padding:3px 0">${mon}</td></tr>
+        <tr><td style="color:var(--text3);padding:3px 0">Monto</td><td style="padding:3px 0">${monto.toLocaleString()}</td></tr>
+        <tr><td style="color:var(--text3);padding:3px 0">Tasa</td><td style="padding:3px 0">${document.getElementById('n-tasa').value}%</td></tr>
+        <tr><td style="color:var(--text3);padding:3px 0">Inicio → Fin</td><td style="padding:3px 0">${document.getElementById('n-ini').value} → ${document.getElementById('n-fin').value}</td></tr>
+      </tbody></table>
+    </div>
+    <div><div style="font-size:10px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Referidores y pago</div>
+      <table><tbody>
+        <tr><td style="color:var(--text3);padding:3px 0;width:130px">Esquema</td><td style="padding:3px 0">${ESQ[e]}</td></tr>
+        <tr><td style="color:var(--text3);padding:3px 0">Referidor A</td><td style="padding:3px 0">${refA}</td></tr>
+        <tr><td style="color:var(--text3);padding:3px 0">Referidor B</td><td style="padding:3px 0">${refB}</td></tr>
+        <tr><td style="color:var(--text3);padding:3px 0">Tipo doc.</td><td style="padding:3px 0">${document.getElementById('n-tipdoc').value} · ${document.getElementById('n-doc').value||'—'}</td></tr>
+        <tr><td style="color:var(--text3);padding:3px 0">Status pago</td><td style="padding:3px 0"><span class="pill ${STATUS_CLASS[document.getElementById('n-status').value]||'pgr'}">${document.getElementById('n-status').value}</span></td></tr>
+      </tbody></table>
+    </div>
+  </div>`;
+}
+function confirmarRegistro(){
+  const vid=parseInt(document.getElementById('n-veh').value);
+  const v=vehiculos.find(x=>x.id===vid);
+  const vTipo=v&&!v.nombre.includes('IAM Inversiones')?'FONDO':'IAM';
+  const tipo=document.getElementById('n-tipo').value==='Captación'?'CAP':'REN';
+  const e=document.getElementById('n-esquema').value;
+  const p=POL[tipo]?.[vTipo]?.[e];
+  const m=parseFloat(document.getElementById('n-monto').value)||0;
+  const empId=parseInt(document.getElementById('n-empresa').value);
+  const emp=empresas.find(x=>x.id===empId);
+  const tc=tcActual();
+  const op={
+    id:Date.now(),
+    cod:document.getElementById('n-cod').value||'OP'+Date.now(),
+    invId:parseInt(document.getElementById('n-inv').value),
+    vehId:vid,vehNombre:v?v.nombre:'—',
+    empId:empId,empNombre:emp?emp.nombre:'—',
+    tipo:document.getElementById('n-tipo').value,
+    estado:document.getElementById('n-estado').value,
+    mon:document.getElementById('n-mon').value,
+    monto:m,tasa:document.getElementById('n-tasa').value,
+    ini:document.getElementById('n-ini').value,fin:document.getElementById('n-fin').value,
+    esquema:e,
+    refAId:parseInt(document.getElementById('n-ref-a').value)||null,
+    refBId:parseInt(document.getElementById('n-ref-b').value)||null,
+    refExtId:parseInt(document.getElementById('n-ref-ext').value)||null,
+    tipdoc:document.getElementById('n-tipdoc').value,
+    doc:document.getElementById('n-doc').value,
+    femi:document.getElementById('n-femi').value,
+    obs:document.getElementById('n-obs').value,
+    statusPago:document.getElementById('n-status').value,
+    comTotal:p?m*p.tot:0,comA:p?m*p.A:0,comB:p?m*p.B:0,
+    comExt:p?m*p.ext:0,comFondo:p?m*p.fon:0,
+    tcCompra:tc.compra,tcVenta:tc.venta,
+    fechaReg:new Date().toISOString().split('T')[0],
+    statusNota:'',
+  };
+  operaciones.push(op);
+  toast('✓ Operación registrada');
+  renderDashboard();
+  setTimeout(()=>document.getElementById('nav-operaciones').click(),1200);
+}
+
+// ═══════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════
+function renderDashboard(){
+  document.getElementById('kpi-total').textContent=operaciones.length;
+  const comT=operaciones.reduce((a,r)=>a+r.comTotal,0);
+  document.getElementById('kpi-com').textContent='S/ '+comT.toFixed(0);
+  document.getElementById('kpi-pend').textContent=operaciones.filter(r=>r.statusPago==='PENDIENTE').length;
+  document.getElementById('kpi-refs').textContent=referidores.length;
+  const pv=vehiculos.map(v=>{const ops=operaciones.filter(r=>r.vehId===v.id);return{n:v.nombre,c:ops.reduce((a,r)=>a+r.comTotal,0),cnt:ops.length};}).filter(x=>x.cnt>0);
+  const mx=Math.max(...pv.map(x=>x.c),1);
+  document.getElementById('dash-fondos').innerHTML=pv.length?pv.map(f=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;color:var(--text2)"><span>${f.n}</span><span>S/ ${f.c.toFixed(0)} · ${f.cnt} ops</span></div><div class="bar-wrap"><div class="bar-fill" style="width:${(f.c/mx*100).toFixed(0)}%;background:var(--blue)"></div></div></div>`).join(''):'<div style="font-size:12px;color:var(--text3);font-style:italic;padding:10px 0">Sin operaciones aún</div>';
+  const rec=operaciones.slice(-5).reverse();
+  document.getElementById('dash-recientes').innerHTML=rec.length?rec.map(r=>`<tr><td>${getNombre(inversionistas,r.invId)}</td><td style="font-size:11px">${r.vehNombre}</td><td>${r.mon} ${r.monto.toLocaleString()}</td><td><span class="pill ${STATUS_CLASS[r.statusPago]||'pgr'}">${r.statusPago}</span></td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;padding:18px;font-style:italic;color:var(--text3)">Sin operaciones</td></tr>';
+}
+
+// ═══════════════════════════════════════════════════
+// OPERACIONES
+// ═══════════════════════════════════════════════════
+function initFiltroVeh(){
+  const s=document.getElementById('ops-f-veh');
+  s.innerHTML='<option value="">Todos los vehículos</option>';
+  vehiculos.forEach(v=>s.innerHTML+=`<option value="${v.id}">${v.nombre}</option>`);
+}
+function renderOps(){
+  const q=(document.getElementById('ops-search').value||'').toLowerCase();
+  const fv=document.getElementById('ops-f-veh').value;
+  const fs=document.getElementById('ops-f-status').value;
+  const data=operaciones.filter(r=>{
+    const invNombre=getNombre(inversionistas,r.invId).toLowerCase();
+    if(q&&!invNombre.includes(q)&&!r.cod.includes(q))return false;
+    if(fv&&r.vehId!=fv)return false;
+    if(fs&&r.statusPago!==fs)return false;
+    return true;
+  });
+  document.getElementById('ops-count').textContent=data.length+' registros';
+  document.getElementById('ops-tbody').innerHTML=data.length===0
+    ?'<tr><td colspan="13" style="text-align:center;padding:28px;font-style:italic;color:var(--text3)">No hay operaciones. Use "Nueva operación" para agregar.</td></tr>'
+    :data.map(r=>`<tr>
+      <td>${r.cod}</td><td>${getNombre(inversionistas,r.invId)}</td>
+      <td style="font-size:11px">${r.vehNombre}</td><td style="font-size:11px">${r.empNombre}</td>
+      <td>${r.mon}</td><td style="text-align:right">${r.monto.toLocaleString()}</td>
+      <td><span class="pill ${r.tipo==='Captación'?'pw':'pb'}">${r.tipo}</span></td>
+      <td><span class="pill ${r.estado==='ACTIVO'?'pb':r.estado==='TERMINADO'?'pg':r.estado==='RESCATE'?'pr':'pw'}">${r.estado}</span></td>
+      <td>${getNombre(referidores,r.refAId)}</td>
+      <td><span class="pill pgr">${r.tipdoc}</span> ${r.doc||'—'}</td>
+      <td style="text-align:right">${r.mon==='USD'?'$':'S/'} ${r.comTotal.toFixed(2)}</td>
+      <td><span class="pill ${STATUS_CLASS[r.statusPago]||'pgr'}">${r.statusPago}</span></td>
+      <td><button class="btn-sm" onclick="abrirCambioStatus(${r.id})">Status</button></td>
+    </tr>`).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// CATÁLOGOS CRUD
+// ═══════════════════════════════════════════════════
+function renderVehiculos(){
+  document.getElementById('veh-tbody').innerHTML=vehiculos.map(v=>`<tr>
+    <td>${v.nombre}</td><td>${v.mon}</td>
+    <td>${empresas.filter(e=>v.empresas.includes(e.id)).map(e=>e.nombre).join(', ')||'—'}</td>
+    <td>${operaciones.filter(r=>r.vehId===v.id).length}</td>
+    <td style="display:flex;gap:6px"><button class="btn-sm" onclick="editarCat('veh',${v.id})">Editar</button><button class="btn-sm danger" onclick="eliminarCat('veh',${v.id})">Eliminar</button></td>
+  </tr>`).join('');
+}
+function renderEmpresas(){
+  document.getElementById('emp-tbody').innerHTML=empresas.map(e=>`<tr>
+    <td>${e.nombre}</td><td>${e.ruc||'—'}</td>
+    <td>${e.veh?vehiculos.find(v=>v.id===e.veh)?.nombre||'—':'General'}</td>
+    <td>${operaciones.filter(r=>r.empId===e.id).length}</td>
+    <td style="display:flex;gap:6px"><button class="btn-sm" onclick="editarCat('emp',${e.id})">Editar</button><button class="btn-sm danger" onclick="eliminarCat('emp',${e.id})">Eliminar</button></td>
+  </tr>`).join('');
+}
+function renderInversionistas(){
+  const q=(document.getElementById('inv-search').value||'').toLowerCase();
+  const data=inversionistas.filter(i=>!q||i.nombre.toLowerCase().includes(q)||i.doc.includes(q));
+  document.getElementById('inv-tbody').innerHTML=data.map(i=>`<tr>
+    <td>${i.nombre}</td><td>${i.tipo}</td><td>${i.doc||'—'}</td><td>${i.email||'—'}</td>
+    <td>${operaciones.filter(r=>r.invId===i.id).length}</td>
+    <td style="display:flex;gap:6px"><button class="btn-sm" onclick="editarCat('inv',${i.id})">Editar</button><button class="btn-sm danger" onclick="eliminarCat('inv',${i.id})">Eliminar</button></td>
+  </tr>`).join('');
+}
+function renderReferidores(){
+  document.getElementById('ref-tbody').innerHTML=referidores.map(r=>`<tr>
+    <td>${r.nombre}</td>
+    <td><span class="pill ${r.tipo==='Interno A'||r.tipo==='Interno B'?'pg':r.tipo==='Empresa'?'pb':'pw'}">${r.tipo}</span></td>
+    <td>${r.empresa||'—'} ${r.ruc?'· '+r.ruc:''}</td>
+    <td>${operaciones.filter(o=>o.refAId===r.id||o.refBId===r.id||o.refExtId===r.id).length}</td>
+    <td style="display:flex;gap:6px"><button class="btn-sm" onclick="editarCat('ref',${r.id})">Editar</button><button class="btn-sm danger" onclick="eliminarCat('ref',${r.id})">Eliminar</button></td>
+  </tr>`).join('');
+}
+function renderTC(){
+  const tc=tcActual();
+  document.getElementById('tc-compra-show').textContent=tc.compra.toFixed(3);
+  document.getElementById('tc-venta-show').textContent=tc.venta.toFixed(3);
+  document.getElementById('tc-fecha-show').textContent=tiposCambio.length?tiposCambio[tiposCambio.length-1].fecha:'—';
+  document.getElementById('tc-tbody').innerHTML=[...tiposCambio].reverse().map(t=>`<tr>
+    <td>${t.fecha}</td><td>S/ ${t.compra.toFixed(3)}</td><td>S/ ${t.venta.toFixed(3)}</td>
+    <td>${t.user}</td><td>${t.nota||'—'}</td>
+  </tr>`).join('');
+}
+function poblarSelectVehEmp(){
+  const s=document.getElementById('memp-veh');
+  s.innerHTML='<option value="">— General / todos —</option>';
+  vehiculos.forEach(v=>s.innerHTML+=`<option value="${v.id}">${v.nombre}</option>`);
+}
+
+// ═══════════════════════════════════════════════════
+// MODALES GENÉRICOS
+// ═══════════════════════════════════════════════════
+function abrirModal(tipo){
+  editIds[tipo]=null;
+  if(tipo==='veh'){document.getElementById('mveh-titulo').textContent='Nuevo vehículo';['mveh-nombre','mveh-nota'].forEach(i=>document.getElementById(i).value='');document.getElementById('mveh-mon').value='PEN';document.getElementById('modal-veh').classList.remove('hidden');}
+  else if(tipo==='emp'){poblarSelectVehEmp();document.getElementById('memp-titulo').textContent='Nueva empresa';['memp-nombre','memp-ruc'].forEach(i=>document.getElementById(i).value='');document.getElementById('memp-veh').value='';document.getElementById('modal-emp').classList.remove('hidden');}
+  else if(tipo==='inv'){document.getElementById('minv-titulo').textContent='Nuevo inversionista';['minv-nombre','minv-doc','minv-email','minv-tel'].forEach(i=>document.getElementById(i).value='');document.getElementById('minv-tipo').value='Persona Natural';document.getElementById('modal-inv').classList.remove('hidden');}
+  else if(tipo==='ref'){document.getElementById('mref-titulo').textContent='Nuevo referidor';['mref-nombre','mref-empresa','mref-ruc'].forEach(i=>document.getElementById(i).value='');document.getElementById('mref-tipo').value='Externo';document.getElementById('modal-ref').classList.remove('hidden');}
+  else if(tipo==='tc'){document.getElementById('mtc-fecha').value=new Date().toISOString().split('T')[0];['mtc-compra','mtc-venta','mtc-nota'].forEach(i=>document.getElementById(i).value='');document.getElementById('modal-tc').classList.remove('hidden');}
+  else if(tipo==='usr'){document.getElementById('musr-titulo').textContent='Nuevo usuario';['musr-nombre','musr-user','musr-pass'].forEach(i=>document.getElementById(i).value='');document.getElementById('musr-rol').value='operador';document.getElementById('modal-usr').classList.remove('hidden');}
+}
+function editarCat(tipo,id){
+  editIds[tipo]=id;
+  if(tipo==='veh'){const x=vehiculos.find(v=>v.id===id);document.getElementById('mveh-titulo').textContent='Editar vehículo';document.getElementById('mveh-nombre').value=x.nombre;document.getElementById('mveh-mon').value=x.mon;document.getElementById('mveh-nota').value=x.nota||'';document.getElementById('modal-veh').classList.remove('hidden');}
+  else if(tipo==='emp'){poblarSelectVehEmp();const x=empresas.find(e=>e.id===id);document.getElementById('memp-titulo').textContent='Editar empresa';document.getElementById('memp-nombre').value=x.nombre;document.getElementById('memp-ruc').value=x.ruc||'';document.getElementById('memp-veh').value=x.veh||'';document.getElementById('modal-emp').classList.remove('hidden');}
+  else if(tipo==='inv'){const x=inversionistas.find(i=>i.id===id);document.getElementById('minv-titulo').textContent='Editar inversionista';document.getElementById('minv-nombre').value=x.nombre;document.getElementById('minv-tipo').value=x.tipo;document.getElementById('minv-doc').value=x.doc||'';document.getElementById('minv-email').value=x.email||'';document.getElementById('minv-tel').value=x.tel||'';document.getElementById('modal-inv').classList.remove('hidden');}
+  else if(tipo==='ref'){const x=referidores.find(r=>r.id===id);document.getElementById('mref-titulo').textContent='Editar referidor';document.getElementById('mref-nombre').value=x.nombre;document.getElementById('mref-tipo').value=x.tipo;document.getElementById('mref-empresa').value=x.empresa||'';document.getElementById('mref-ruc').value=x.ruc||'';document.getElementById('modal-ref').classList.remove('hidden');}
+  else if(tipo==='usr'){const x=usuarios.find(u=>u.id===id);document.getElementById('musr-titulo').textContent='Editar usuario';document.getElementById('musr-nombre').value=x.nombre;document.getElementById('musr-user').value=x.user;document.getElementById('musr-pass').value=x.pass;document.getElementById('musr-rol').value=x.rol;editIds.usr=id;document.getElementById('modal-usr').classList.remove('hidden');}
+}
+function guardar(tipo){
+  if(tipo==='veh'){
+    const nom=document.getElementById('mveh-nombre').value.trim();if(!nom){toast('Ingrese nombre');return;}
+    const obj={nombre:nom,mon:document.getElementById('mveh-mon').value,nota:document.getElementById('mveh-nota').value,empresas:[]};
+    if(editIds.veh)vehiculos[vehiculos.findIndex(x=>x.id===editIds.veh)]={id:editIds.veh,...obj,empresas:vehiculos.find(x=>x.id===editIds.veh).empresas};
+    else vehiculos.push({id:Date.now(),...obj});
+    cerrarModales();renderVehiculos();toast('✓ Vehículo guardado');
+  }else if(tipo==='emp'){
+    const nom=document.getElementById('memp-nombre').value.trim();if(!nom){toast('Ingrese nombre');return;}
+    const vid=parseInt(document.getElementById('memp-veh').value)||null;
+    const obj={nombre:nom,ruc:document.getElementById('memp-ruc').value,veh:vid};
+    if(editIds.emp)empresas[empresas.findIndex(x=>x.id===editIds.emp)]={id:editIds.emp,...obj};
+    else{const ne={id:Date.now(),...obj};empresas.push(ne);if(vid){const v=vehiculos.find(x=>x.id===vid);if(v&&!v.empresas.includes(ne.id))v.empresas.push(ne.id);}}
+    cerrarModales();renderEmpresas();toast('✓ Empresa guardada');
+  }else if(tipo==='inv'){
+    const nom=document.getElementById('minv-nombre').value.trim();if(!nom){toast('Ingrese nombre');return;}
+    const obj={nombre:nom,tipo:document.getElementById('minv-tipo').value,doc:document.getElementById('minv-doc').value,email:document.getElementById('minv-email').value,tel:document.getElementById('minv-tel').value};
+    if(editIds.inv)inversionistas[inversionistas.findIndex(x=>x.id===editIds.inv)]={id:editIds.inv,...obj};
+    else inversionistas.push({id:Date.now(),...obj});
+    cerrarModales();renderInversionistas();populateSelects();toast('✓ Inversionista guardado');
+  }else if(tipo==='ref'){
+    const nom=document.getElementById('mref-nombre').value.trim();if(!nom){toast('Ingrese nombre');return;}
+    const obj={nombre:nom,tipo:document.getElementById('mref-tipo').value,empresa:document.getElementById('mref-empresa').value,ruc:document.getElementById('mref-ruc').value};
+    if(editIds.ref)referidores[referidores.findIndex(x=>x.id===editIds.ref)]={id:editIds.ref,...obj};
+    else referidores.push({id:Date.now(),...obj});
+    cerrarModales();renderReferidores();populateSelects();toast('✓ Referidor guardado');
+  }else if(tipo==='tc'){
+    const f=document.getElementById('mtc-fecha').value,c=parseFloat(document.getElementById('mtc-compra').value),v=parseFloat(document.getElementById('mtc-venta').value);
+    if(!f||!c||!v){toast('Complete fecha y tipos de cambio');return;}
+    tiposCambio.push({id:Date.now(),fecha:f,compra:c,venta:v,nota:document.getElementById('mtc-nota').value,user:currentUser.user});
+    cerrarModales();renderTC();actualizarTC();toast('✓ Tipo de cambio registrado');
+  }else if(tipo==='usr'){
+    const nom=document.getElementById('musr-nombre').value.trim(),usr=document.getElementById('musr-user').value.trim(),pas=document.getElementById('musr-pass').value,rol=document.getElementById('musr-rol').value;
+    if(!nom||!usr||!pas){toast('Complete todos los campos');return;}
+    if(pas.length<6){toast('Contraseña mínimo 6 caracteres');return;}
+    if(usuarios.find(x=>x.user===usr&&x.id!==editIds.usr)){toast('Usuario ya existe');return;}
+    if(editIds.usr)usuarios[usuarios.findIndex(x=>x.id===editIds.usr)]={id:editIds.usr,nombre:nom,user:usr,pass:pas,rol};
+    else usuarios.push({id:Date.now(),nombre:nom,user:usr,pass:pas,rol});
+    cerrarModales();renderUsuarios();toast('✓ Usuario guardado');
+  }
+}
+function eliminarCat(tipo,id){
+  if(!confirm('¿Eliminar este registro?'))return;
+  if(tipo==='veh')vehiculos=vehiculos.filter(x=>x.id!==id);
+  else if(tipo==='emp')empresas=empresas.filter(x=>x.id!==id);
+  else if(tipo==='inv')inversionistas=inversionistas.filter(x=>x.id!==id);
+  else if(tipo==='ref')referidores=referidores.filter(x=>x.id!==id);
+  const renders={veh:renderVehiculos,emp:renderEmpresas,inv:renderInversionistas,ref:renderReferidores};
+  if(renders[tipo])renders[tipo]();
+  toast('Eliminado');
+}
+
+// ═══════════════════════════════════════════════════
+// STATUS PAGO
+// ═══════════════════════════════════════════════════
+function abrirCambioStatus(id){
+  statusOpId=id;
+  const r=operaciones.find(x=>x.id===id);
+  document.getElementById('modal-status-info').textContent=`Operación ${r.cod} · ${getNombre(inversionistas,r.invId)}`;
+  document.getElementById('ms-status').value=r.statusPago;
+  document.getElementById('ms-nota').value=r.statusNota||'';
+  document.getElementById('modal-status').classList.remove('hidden');
+}
+function guardarStatus(){
+  const r=operaciones.find(x=>x.id===statusOpId);if(!r)return;
+  r.statusPago=document.getElementById('ms-status').value;
+  r.statusNota=document.getElementById('ms-nota').value;
+  cerrarModales();renderOps();renderDashboard();toast('✓ Status actualizado');
+}
+
+// ═══════════════════════════════════════════════════
+// DEVENGADOS / PAGAR / PAGADAS
+// ═══════════════════════════════════════════════════
+function renderDevengados(){
+  const hoy=new Date();
+  let tot=0,acum=0;
+  const rows=operaciones.map(r=>{
+    let dias=0,trans=0,dev=0;
+    if(r.ini&&r.fin){const d1=new Date(r.ini),d2=new Date(r.fin);dias=Math.max(1,Math.round((d2-d1)/86400000));trans=Math.min(dias,Math.max(0,Math.round((hoy-d1)/86400000)));dev=r.comTotal*(trans/dias);}
+    else dev=r.comTotal;
+    tot+=r.comTotal;acum+=dev;
+    const pct=dias>0?Math.round(trans/dias*100):100;
+    return`<tr><td>${r.cod}</td><td>${getNombre(inversionistas,r.invId)}</td><td>${getNombre(referidores,r.refAId)}</td><td>S/ ${r.comTotal.toFixed(2)}</td><td>${dias}</td><td>${trans}</td><td style="color:var(--green)">S/ ${dev.toFixed(2)}</td><td style="color:var(--amber)">S/ ${(r.comTotal-dev).toFixed(2)}</td><td><div style="display:flex;align-items:center;gap:6px"><div class="bar-wrap" style="flex:1;min-width:50px"><div class="bar-fill" style="width:${pct}%;background:var(--blue)"></div></div><span style="font-size:11px">${pct}%</span></div></td></tr>`;
+  });
+  document.getElementById('dev-total').textContent='S/ '+tot.toFixed(0);
+  document.getElementById('dev-acum').textContent='S/ '+acum.toFixed(0);
+  document.getElementById('dev-pend').textContent='S/ '+(tot-acum).toFixed(0);
+  document.getElementById('dev-tbody').innerHTML=rows.length?rows.join(''):'<tr><td colspan="9" style="text-align:center;padding:28px;font-style:italic;color:var(--text3)">Sin operaciones</td></tr>';
+}
+function renderPagar(){
+  const pend=operaciones.filter(r=>!['PAGADO','NO APLICA'].includes(r.statusPago));
+  document.getElementById('pagar-tbody').innerHTML=pend.length?pend.map(r=>`<tr>
+    <td>${r.cod}</td><td>${getNombre(referidores,r.refAId)}</td><td>${r.empNombre}</td>
+    <td><span class="pill pgr">${r.tipdoc}</span> ${r.doc||'—'}</td>
+    <td>S/ ${r.comTotal.toFixed(2)}</td>
+    <td><span class="pill ${STATUS_CLASS[r.statusPago]||'pgr'}">${r.statusPago}</span></td>
+    <td style="display:flex;gap:6px">
+      <button class="btn-sm" onclick="abrirCambioStatus(${r.id})">Cambiar status</button>
+    </td>
+  </tr>`).join(''):'<tr><td colspan="7" style="text-align:center;padding:28px;font-style:italic;color:var(--text3)">No hay comisiones pendientes</td></tr>';
+}
+function renderPagadas(){
+  const pag=operaciones.filter(r=>r.statusPago==='PAGADO');
+  document.getElementById('pagadas-tbody').innerHTML=pag.length?pag.map(r=>`<tr>
+    <td>${r.cod}</td><td>${getNombre(inversionistas,r.invId)}</td><td>${getNombre(referidores,r.refAId)}</td>
+    <td><span class="pill pgr">${r.tipdoc}</span></td><td>${r.doc||'—'}</td><td>${r.mon}</td>
+    <td>${r.comTotal.toFixed(2)}</td><td><strong>${r.mon==='USD'?'$':'S/'} ${r.comTotal.toFixed(2)}</strong></td>
+  </tr>`).join(''):'<tr><td colspan="8" style="text-align:center;padding:28px;font-style:italic;color:var(--text3)">Sin comisiones pagadas</td></tr>';
+}
+
+// ═══════════════════════════════════════════════════
+// CALCULAR
+// ═══════════════════════════════════════════════════
+function initCalc(){
+  const t=new Date(),fy=new Date(t);fy.setFullYear(fy.getFullYear()+1);
+  document.getElementById('c-ini').value=t.toISOString().split('T')[0];
+  document.getElementById('c-fin').value=fy.toISOString().split('T')[0];
+  calcular();
+}
+function calcular(){
+  const f=document.getElementById('c-fondo').value,t=document.getElementById('c-tipo').value,e=document.getElementById('c-esquema').value;
+  const m=parseFloat(document.getElementById('c-monto').value)||0,mon=document.getElementById('c-mon').value;
+  const ini=document.getElementById('c-ini').value,fin=document.getElementById('c-fin').value;
+  const p=POL[t]?.[f]?.[e];
+  if(!p){document.getElementById('calc-res').innerHTML='<div style="font-size:12px;color:var(--text3);padding:30px;text-align:center;font-style:italic">Sin datos</div>';return;}
+  const s=mon==='USD'?'$':'S/';
+  let dias=0;if(ini&&fin)dias=Math.max(0,Math.round((new Date(fin)-new Date(ini))/86400000));
+  document.getElementById('calc-res').innerHTML=`<div class="result-block">
+    <div class="rrow"><span class="rl">Comisión total</span><span class="rv">${s} ${(m*p.tot).toFixed(2)} (${(p.tot*100).toFixed(2)}%)</span></div>
+    ${e!=='SIN'?`<div class="rrow"><span class="rl">Referidor externo</span><span class="rv">${s} ${(m*p.ext).toFixed(2)} (${(p.ext*100).toFixed(2)}%)</span></div>`:''}
+    <div class="rrow"><span class="rl">Referidor interno A</span><span class="rv">${s} ${(m*p.A).toFixed(2)} (${(p.A*100).toFixed(2)}%)</span></div>
+    <div class="rrow"><span class="rl">Referidor interno B</span><span class="rv">${s} ${(m*p.B).toFixed(2)} (${(p.B*100).toFixed(2)}%)</span></div>
+    <div class="rsec"><div class="rsec-title">Distribución institucional</div>
+      <div class="rrow"><span class="rl">Asume IAM</span><span class="rv">${s} ${(m*(p.tot-p.fon)).toFixed(2)}</span></div>
+      <div class="rrow"><span class="rl">Asume Fondo</span><span class="rv">${s} ${(m*p.fon).toFixed(2)}</span></div>
+    </div>
+    ${dias>0?`<div style="margin-top:10px;font-size:12px;color:var(--text2)">Devengado diario: <strong>${s} ${(m*p.tot/dias).toFixed(4)}</strong> · ${dias} días</div>`:''}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// PROYECCIÓN
+// ═══════════════════════════════════════════════════
+function renderProy(){
+  const mult=parseFloat(document.getElementById('proy-esc').value)||1;
+  const base=[{m:'May 2026',c:280000,r:150000},{m:'Jun 2026',c:320000,r:180000},{m:'Jul 2026',c:250000,r:200000},{m:'Ago 2026',c:300000,r:160000},{m:'Set 2026',c:350000,r:220000},{m:'Oct 2026',c:280000,r:190000}];
+  document.getElementById('proy-tbody').innerHTML=base.map(b=>{
+    const tc=b.c*0.06*mult,tr=b.r*0.03*mult,tot=tc+tr;
+    return`<tr><td>${b.m}</td><td>S/ ${Math.round(b.c*mult).toLocaleString()}</td><td>S/ ${Math.round(b.r*mult).toLocaleString()}</td><td><strong>S/ ${Math.round(tot).toLocaleString()}</strong></td><td>S/ ${Math.round(tot*0.6).toLocaleString()}</td><td>S/ ${Math.round(tot*0.4).toLocaleString()}</td></tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// USUARIOS
+// ═══════════════════════════════════════════════════
+function renderUsuarios(){
+  document.getElementById('user-grid').innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px;margin-bottom:14px">${usuarios.map(u=>`<div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px">
+    <div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;margin-bottom:9px;background:${u.rol==='admin'?'var(--blue-l)':u.rol==='operador'?'var(--green-l)':'var(--amber-l)'};color:${u.rol==='admin'?'var(--blue)':u.rol==='operador'?'var(--green)':'var(--amber)'}">${u.nombre.split(' ').map(x=>x[0]).slice(0,2).join('')}</div>
+    <div style="font-size:12px;margin-bottom:2px">${u.nombre}</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:8px;font-style:italic">@${u.user} · <span class="pill ${u.rol==='admin'?'pb':u.rol==='operador'?'pg':'pw'}">${ROLES[u.rol]}</span></div>
+    <div style="display:flex;gap:5px">
+      <button class="btn-sm" onclick="editarCat('usr',${u.id})">Editar</button>
+      ${u.user!==currentUser.user?`<button class="btn-sm danger" onclick="eliminarUsr(${u.id})">Eliminar</button>`:'<span style="font-size:10px;color:var(--text3);font-style:italic">Tú</span>'}
+    </div>
+  </div>`).join('')}</div>`;
+}
+function eliminarUsr(id){if(!confirm('¿Eliminar usuario?'))return;usuarios=usuarios.filter(x=>x.id!==id);renderUsuarios();}
+
+// ═══════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════
+function cerrarModales(){['modal-veh','modal-emp','modal-inv','modal-ref','modal-tc','modal-usr','modal-status'].forEach(id=>document.getElementById(id).classList.add('hidden'));}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+</script>
+</body>
+</html>
